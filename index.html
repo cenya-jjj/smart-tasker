@@ -74,6 +74,18 @@
         .task-card.expanded .task-details { display: block; }
         .task-details { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); }
         .priority-high { box-shadow: 0 0 15px rgba(99, 102, 241, 0.3); border-color: var(--primary) !important; }
+        .status-plan { border-left: 3px solid var(--st-plan); }
+        .status-todo { border-left: 3px solid var(--st-todo); }
+        .status-wait { border-left: 3px solid var(--st-wait); }
+        .status-done { border-left: 3px solid var(--st-done); }
+        .status-chip { font-size: 10px; border-radius: 999px; padding: 2px 8px; border: 1px solid var(--border-color); }
+        .status-chip.plan { color: var(--st-plan); }
+        .status-chip.todo { color: var(--st-todo); }
+        .status-chip.wait { color: var(--st-wait); }
+        .status-chip.done { color: var(--st-done); }
+        .task-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+        .task-group { background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px; }
+        .task-group-title { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 8px; }
 
         .stats-table { width: 100%; border-collapse: collapse; font-size: 12px; }
         .stats-table th, .stats-table td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color); }
@@ -191,6 +203,12 @@
                             <option value="plan">Plan</option><option value="todo">To Do</option>
                             <option value="wait">Wait</option><option value="done">Done</option>
                         </select>
+                        <select id="sort-by" onchange="renderTasks()" style="margin:0; padding:6px; width:auto; font-size:12px;">
+                            <option value="dueAsc">Сначала ранний дедлайн</option>
+                            <option value="dueDesc">Сначала поздний дедлайн</option>
+                            <option value="priorityDesc">Высокий приоритет</option>
+                            <option value="newest">Сначала новые</option>
+                        </select>
                         <button class="btn-secondary" style="width:auto; padding:6px 12px; margin:0;" onclick="document.getElementById('filter-date').value=''; renderTasks();">Сброс</button>
                         <label style="display:flex; align-items:center; gap:5px; font-size:12px; cursor:pointer;">
                             <input type="checkbox" id="setting-show-done" onchange="renderTasks()" style="width:auto; margin:0;"> Show Done
@@ -281,6 +299,7 @@
             <input type="text" id="modal-task-title" placeholder="Что сделать?">
             <textarea id="modal-task-desc" rows="3" placeholder="Описание..."></textarea>
             <div style="display:flex; gap:10px;">
+                <input type="text" id="modal-task-emoji" placeholder="Эмодзи (напр. 🚀)" maxlength="2">
                 <input type="text" id="modal-task-tag" placeholder="Тег">
                 <select id="modal-task-priority"><option value="low">Низкая</option><option value="medium">Средняя</option><option value="high">Высокая 🔥</option></select>
             </div>
@@ -288,6 +307,7 @@
                 <input type="date" id="modal-task-date">
                 <select id="modal-task-status"><option value="plan">Plan</option><option value="todo">To Do</option><option value="wait">Wait</option><option value="done">Done</option></select>
             </div>
+            <input type="date" id="modal-task-completed-date" title="Дата завершения">
             <input type="hidden" id="modal-task-id">
             <input type="hidden" id="modal-source-note-id">
             <div style="display:flex; gap:10px; margin-top:10px;"><button onclick="saveTaskModal()">Сохранить</button><button class="btn-secondary" onclick="closeModals()">Отмена</button></div>
@@ -488,7 +508,10 @@
                     const isOwner = t.owner === uid;
                     teamsList.innerHTML += `<div class="card" style="padding:15px; margin-bottom:10px; background:var(--bg-body); border:1px solid var(--border-color);">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <b>${t.name}</b>
+                            <div>
+                                <b>${t.name}</b>
+                                <div style="font-size:11px; color:var(--text-muted);">Пользователей: ${(t.members || []).length}</div>
+                            </div>
                             <div style="display:flex; gap:8px;">
                                 <button class="btn-secondary" style="width:auto; padding:5px 10px;" onclick="inviteUser('${t.id}')">Пригласить</button>
                                 ${isOwner ? `<button class="btn-danger" style="margin:0;" onclick="deleteTeam('${t.id}')">Удалить</button>` : ''}
@@ -572,29 +595,35 @@
             const taskTitle = document.getElementById('modal-task-title');
             const taskDesc = document.getElementById('modal-task-desc');
             const taskTag = document.getElementById('modal-task-tag');
+            const taskEmoji = document.getElementById('modal-task-emoji');
             const taskPriority = document.getElementById('modal-task-priority');
             const taskDate = document.getElementById('modal-task-date');
             const taskStatus = document.getElementById('modal-task-status');
+            const taskCompletedDate = document.getElementById('modal-task-completed-date');
             const source = id ? allItems.find(x => x.id === id) : null;
 
             idEl.value = '';
             sourceNoteEl.value = '';
             taskTitle.value = '';
             taskDesc.value = '';
+            taskEmoji.value = '';
             taskTag.value = '';
             taskPriority.value = 'medium';
             taskDate.value = '';
             taskStatus.value = 'plan';
+            taskCompletedDate.value = '';
 
             if(source?.itemType === 'task') {
                 titleEl.innerText = "Редактировать задачу";
                 idEl.value = source.id;
                 taskTitle.value = source.title || '';
                 taskDesc.value = source.description || '';
+                taskEmoji.value = source.emoji || '';
                 taskTag.value = source.tag || '';
                 taskPriority.value = source.priority || 'medium';
                 taskDate.value = source.dueDate || '';
                 taskStatus.value = source.status || 'plan';
+                taskCompletedDate.value = source.completedAt ? source.completedAt.split('T')[0] : '';
             } else if(source?.itemType === 'note' || (!source?.itemType && source?.text)) {
                 titleEl.innerText = "Создать задачу из заметки";
                 sourceNoteEl.value = source.id;
@@ -612,44 +641,80 @@
 
         window.saveTaskModal = async () => {
             const title = document.getElementById('modal-task-title').value.trim(); if(!title) return;
+            const selectedStatus = document.getElementById('modal-task-status').value;
+            const completedDateRaw = document.getElementById('modal-task-completed-date').value;
             const data = {
                 space: currentSpace, itemType:'task', title, description: document.getElementById('modal-task-desc').value,
+                emoji: (document.getElementById('modal-task-emoji').value || '').trim(),
                 tag: document.getElementById('modal-task-tag').value, priority: document.getElementById('modal-task-priority').value,
-                dueDate: document.getElementById('modal-task-date').value, status: document.getElementById('modal-task-status').value,
+                dueDate: document.getElementById('modal-task-date').value, status: selectedStatus,
                 userId: auth.currentUser.uid, updatedAt: new Date().toISOString()
             };
+            if(selectedStatus === 'done') {
+                data.completedAt = completedDateRaw ? `${completedDateRaw}T12:00:00.000Z` : new Date().toISOString();
+            } else {
+                data.completedAt = null;
+            }
             const id = document.getElementById('modal-task-id').value;
             const sourceNoteId = document.getElementById('modal-source-note-id').value;
-            if(id) {
-                await updateDoc(doc(db,"tasks",id), data);
-            } else {
-                data.createdAt = new Date().toISOString();
-                await addDoc(collection(db,"tasks"), data);
-                if(sourceNoteId) await deleteDoc(doc(db, "tasks", sourceNoteId));
+            try {
+                if(id) {
+                    await updateDoc(doc(db,"tasks",id), data);
+                } else {
+                    data.createdAt = new Date().toISOString();
+                    await addDoc(collection(db,"tasks"), data);
+                    if(sourceNoteId) await deleteDoc(doc(db, "tasks", sourceNoteId));
+                }
+                closeModals();
+            } catch (err) {
+                showToast("Ошибка", "Не удалось сохранить задачу");
             }
-            closeModals();
         };
 
         window.renderTasks = () => {
             const grid = document.getElementById('tasks-grid'); grid.innerHTML = '';
             const status = document.getElementById('filter-status').value;
             const date = document.getElementById('filter-date').value;
+            const sortBy = document.getElementById('sort-by').value;
             const showDone = document.getElementById('setting-show-done').checked;
             let filtered = allItems.filter(i => i.itemType==='task' && i.space === currentSpace);
             if(!showDone) filtered = filtered.filter(t => t.status !== 'done');
             if(status !== 'all') filtered = filtered.filter(t => t.status === status);
             if(date) filtered = filtered.filter(t => t.dueDate === date);
-            filtered.forEach(t => {
+            const priorityWeight = { high: 3, medium: 2, low: 1 };
+            filtered.sort((a, b) => {
+                if(sortBy === 'priorityDesc') return (priorityWeight[b.priority] || 0) - (priorityWeight[a.priority] || 0);
+                if(sortBy === 'newest') return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+                const aDue = a.dueDate ? new Date(a.dueDate) : new Date('9999-12-31');
+                const bDue = b.dueDate ? new Date(b.dueDate) : new Date('9999-12-31');
+                return sortBy === 'dueDesc' ? bDue - aDue : aDue - bDue;
+            });
+
+            const groups = { plan: [], todo: [], wait: [], done: [] };
+            filtered.forEach(t => groups[t.status || 'plan']?.push(t));
+            const groupMeta = [
+                { key: 'plan', title: 'Plan' },
+                { key: 'todo', title: 'To Do' },
+                { key: 'wait', title: 'Wait' },
+                { key: 'done', title: 'Done' }
+            ];
+            grid.classList.remove('tasks-grid');
+            grid.innerHTML = `<div class="task-groups">${groupMeta.map(g => `<div class="task-group"><div class="task-group-title"><span class="status-chip ${g.key}">${g.title}</span><span>${groups[g.key].length}</span></div><div id="group-${g.key}"></div></div>`).join('')}</div>`;
+
+            groupMeta.forEach(g => groups[g.key].forEach(t => {
                 const prior = t.priority === 'high' ? 'priority-high' : '';
-                grid.innerHTML += `<div class="task-card status-${t.status} ${prior}" onclick="this.classList.toggle('expanded')">
-                    <div style="display:flex; justify-content:space-between;"><b>${t.title}</b><div class="status-dot bg-${t.status}" style="width:8px; height:8px; border-radius:50%;"></div></div>
+                const emoji = t.emoji ? `${t.emoji} ` : '';
+                const doneMeta = t.completedAt ? `<div style="font-size:10px; color:var(--st-done); margin-top:4px;">Завершено: ${t.completedAt.split('T')[0]}</div>` : '';
+                document.getElementById(`group-${g.key}`).innerHTML += `<div class="task-card status-${t.status} ${prior}" onclick="this.classList.toggle('expanded')">
+                    <div style="display:flex; justify-content:space-between;"><b>${emoji}${t.title}</b><span class="status-chip ${t.status}">${(t.status || 'plan').toUpperCase()}</span></div>
                     <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">#${t.tag} | 📅 ${t.dueDate || '-'}</div>
+                    ${doneMeta}
                     <div class="task-details" onclick="event.stopPropagation()">
                         <p style="font-size:12px;">${t.description || '...'}</p>
                         <div style="display:flex; gap:8px;"><button class="btn-icon" onclick="changeStatus(event,'${t.id}','done')">✓</button><button class="btn-icon" onclick="openTaskModal('${t.id}')">✏️</button><button class="btn-icon" style="color:red;" onclick="deleteDocItem('${t.id}')">✕</button></div>
                     </div>
                 </div>`;
-            });
+            }));
         };
 
         window.renderCalendar = () => {
@@ -675,16 +740,33 @@
             let tasks = allItems.filter(i => i.itemType === 'task');
             if(space !== 'all') tasks = tasks.filter(t => t.space === space);
             const filtered = tasks.filter(t => t.createdAt.split('T')[0] >= from && t.createdAt.split('T')[0] <= to);
-            document.getElementById('stats-summary').innerHTML = `<div class="stats-box"><div>Создано</div><div class="stats-num">${filtered.length}</div></div><div class="stats-box"><div>Выполнено</div><div class="stats-num" style="color:var(--st-done)">${filtered.filter(x=>x.status==='done').length}</div></div>`;
-            let tbl = `<table class="stats-table"><tr><th>Дата</th><th>Задача</th><th>Статус</th></tr>`;
-            filtered.forEach(t => tbl += `<tr><td>${t.createdAt.split('T')[0]}</td><td>${t.title}</td><td>${t.status}</td></tr>`);
+            const perStatus = ['plan','todo','wait','done'].map(s => `<div style="font-size:11px; color:var(--text-muted);">${s.toUpperCase()}: <b style="color:var(--text-heading);">${filtered.filter(x => x.status === s).length}</b></div>`).join('');
+            document.getElementById('stats-summary').innerHTML = `<div class="stats-box"><div>Создано</div><div class="stats-num">${filtered.length}</div></div><div class="stats-box"><div>Выполнено</div><div class="stats-num" style="color:var(--st-done)">${filtered.filter(x=>x.status==='done').length}</div>${perStatus}</div>`;
+            let tbl = `<table class="stats-table"><tr><th>Дата</th><th>Команда/пространство</th><th>Задача</th><th>Статус</th><th>Завершено</th></tr>`;
+            filtered.forEach(t => {
+                const teamName = t.space === 'personal' ? 'Личные' : (myTeams.find(tm => tm.id === t.space)?.name || 'Команда');
+                tbl += `<tr><td>${t.createdAt.split('T')[0]}</td><td>${teamName}</td><td>${t.emoji ? `${t.emoji} ` : ''}${t.title}</td><td>${t.status}</td><td>${t.completedAt ? t.completedAt.split('T')[0] : '-'}</td></tr>`;
+            });
             document.getElementById('stats-table-container').innerHTML = tbl + `</table>`;
         };
 
         window.deleteDocItem = (id) => showConfirm("Удалить?", "Это навсегда.", async () => await deleteDoc(doc(db,"tasks",id)));
         window.changeMonth = (dir) => { currentDate.setMonth(currentDate.getMonth()+dir); renderCalendar(); };
         window.selectDateFilter = (ds) => { document.getElementById('filter-date').value = ds; renderTasks(); };
-        window.changeStatus = async (e,id,status) => { if(e) e.stopPropagation(); await updateDoc(doc(db,"tasks",id), {status}); };
+        window.changeStatus = async (e,id,status) => {
+            if(e) e.stopPropagation();
+            let payload = { status };
+            if(status === 'done') {
+                const today = new Date().toLocaleDateString('en-CA');
+                showPrompt("Дата завершения", "YYYY-MM-DD", today, async (doneDate) => {
+                    payload.completedAt = `${doneDate}T12:00:00.000Z`;
+                    await updateDoc(doc(db,"tasks",id), payload);
+                });
+                return;
+            }
+            payload.completedAt = null;
+            await updateDoc(doc(db,"tasks",id), payload);
+        };
         window.convertNoteToTask = (id) => openTaskModal(id);
 
         window.saveProfile = async () => {
