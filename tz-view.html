@@ -12,13 +12,34 @@
             --primary: #6366f1; --primary-hover: #4f46e5;
         }
         * { box-sizing: border-box; }
-        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
+        html, body { height: 100%; margin: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); min-height: 100%; display: flex; flex-direction: column; }
         .view-top { flex-shrink: 0; padding: 14px 18px; border-bottom: 1px solid var(--border-color); background: var(--bg-card); }
         .view-top h1 { margin: 0 0 6px; font-size: 18px; color: var(--text-heading); }
         .view-top .meta { font-size: 12px; color: var(--text-muted); }
-        .view-grid { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 300px; min-height: 0; }
-        @media (max-width: 900px) { .view-grid { grid-template-columns: 1fr; grid-template-rows: minmax(280px, 1fr) auto; } }
-        .view-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; border-right: 1px solid var(--border-color); }
+        /* flex:1 + строка 1fr — иначе центральная колонка схлопывается и схема/описание не видны */
+        .view-grid {
+            flex: 1;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 300px;
+            grid-template-rows: minmax(0, 1fr);
+        }
+        @media (max-width: 900px) {
+            .view-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: minmax(320px, 1fr) auto;
+            }
+        }
+        .view-main {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            min-height: 0;
+            overflow: hidden;
+            border-right: 1px solid var(--border-color);
+            height: 100%;
+        }
         @media (max-width: 900px) { .view-main { border-right: none; border-bottom: 1px solid var(--border-color); } }
         .view-tabs { display: flex; gap: 4px; margin-top: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--border-color); }
         .view-tab { cursor: pointer; padding: 10px 16px; font-size: 13px; font-weight: 600; font-family: inherit; border: none; border-radius: 10px 10px 0 0; background: transparent; color: var(--text-muted); margin-bottom: -1px; border-bottom: 2px solid transparent; }
@@ -49,8 +70,8 @@
         .desc-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 12px; border-right: 1px solid var(--border-color); overflow: hidden; }
         .desc-col:last-child { border-right: none; }
         @media (max-width: 800px) { .desc-col { border-right: none; border-bottom: 1px solid var(--border-color); } .desc-col:last-child { border-bottom: none; } }
-        .dump-fill { flex: 1; min-height: 0; margin: 0; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-body); font-size: 13px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; font-family: 'Inter', ui-monospace, Menlo, monospace; overflow-y: auto; }
-        .view-side { background: var(--bg-card); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+        .dump-fill { flex: 1; min-height: 120px; margin: 0; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-body); font-size: 13px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; font-family: 'Inter', ui-monospace, Menlo, monospace; overflow-y: auto; }
+        .view-side { background: var(--bg-card); display: flex; flex-direction: column; min-height: 0; min-width: 0; height: 100%; overflow: hidden; }
         .view-side-inner { padding: 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; overflow: hidden; }
         .view-side h2 { margin: 0; font-size: 15px; color: var(--text-heading); }
         .view-side .hint { font-size: 12px; color: var(--text-muted); margin: 0; }
@@ -65,12 +86,18 @@
         button:not(.view-tab):hover { background: var(--primary-hover); }
         .err { padding: 40px 20px; text-align: center; color: var(--text-muted); }
         .hidden { display: none !important; }
+        .page-ok-root:not(.hidden) {
+            flex: 1;
+            min-height: 0;
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
     </style>
 </head>
 <body>
     <div id="page-loading" class="view-top"><p style="margin:0;color:var(--text-muted);">Загрузка…</p></div>
     <div id="page-err" class="err hidden"></div>
-    <div id="page-ok" class="hidden" style="display:flex; flex-direction:column; flex:1; min-height:0;">
+    <div id="page-ok" class="hidden page-ok-root" style="display:flex; flex-direction:column; flex:1; min-height:0;">
         <div class="view-top">
             <h1 id="pub-title">ТЗ</h1>
             <div class="meta" id="pub-meta"></div>
