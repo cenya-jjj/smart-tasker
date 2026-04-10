@@ -196,6 +196,7 @@
             </div>
             <button onclick="handleLogin()">Войти</button>
             <div style="text-align: center;"><button class="btn-link" onclick="toggleAuth('register')" style="font-size:12px; color:var(--primary); background:none; border:none; cursor:pointer;">Регистрация</button></div>
+            <p style="text-align:center; margin-top:18px; font-size:13px; color:var(--text-muted); line-height:1.5;">Хотите просто посмотреть интерфейс?<br><a href="app-demo.html" style="color:var(--primary); font-weight:600;">Открыть демо без входа</a> — заметки, календарь, доска и ссылка на пример ТЗ.</p>
         </div>
 
         <div id="form-register" class="hidden">
@@ -350,48 +351,61 @@
         <!-- ВЬЮ: СПРАВКА -->
         <div id="view-help" class="hidden">
             <h3 style="margin-bottom: 5px;">📖 Руководство пользователя</h3>
-            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Как выжать максимум из Смарт Задачника Pro</p>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Смарт Задачник Pro: рабочий стол, команды, технические задания</p>
+
+            <div class="help-card" style="margin-bottom: 22px; border-color: var(--primary);">
+                <div class="help-icon">🎯</div>
+                <h4 style="margin: 0 0 10px 0; font-size: 15px;">Демонстрация без регистрации</h4>
+                <p style="font-size: 13px; color: var(--text-muted); line-height: 1.55; margin: 0 0 12px;">Страница <a href="app-demo.html" style="color:var(--primary); font-weight:600;">app-demo.html</a> имитирует рабочий стол: заметки, календарь с задачами, доска и карточка справа. Данные локальные и не сохраняются.</p>
+                <p style="font-size: 13px; color: var(--text-muted); line-height: 1.55; margin: 0 0 12px;">Пример ТЗ для просмотра (схема и текст, без Firebase): <a href="tz-demo-sample.html" style="color:var(--primary); font-weight:600;">tz-demo-sample.html</a>.</p>
+                <p style="font-size: 13px; color: var(--text-muted); line-height: 1.55; margin: 0;">Полный функционал с синхронизацией — после входа в этот же сайт (Firebase). Отдельного «демо-логина» в коде нет: при необходимости владелец проекта создаёт тестовый аккаунт в консоли Firebase и передаёт гостю email и пароль.</p>
+            </div>
             
             <div class="help-grid">
                 <div class="help-card">
+                    <div class="help-icon">🏠</div>
+                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">Рабочий стол</h4>
+                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">Вкладки <b>Личные</b> и команды переключают пространство. Заметки слева, календарь справа: в ячейке видно до четырёх задач, счётчик задач на день, многоточие если записей больше. Клик по дате фильтрует доску по дедлайну. Кнопка <b>Фильтры ▼</b> на доске открывает дату, статус, сортировку, режим «Доска / Таблица» и показ выполненных.</p>
+                </div>
+                <div class="help-card">
+                    <div class="help-icon">📋</div>
+                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">Доска и карточка</h4>
+                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">Колонки Plan / To Do / Wait / Done. Карточку можно перетащить в другую колонку. Справа панель редактирования выбранной задачи (скруглённый блок). Длинные названия на карточках обрезаются; полный текст — во всплывающей подсказке.</p>
+                </div>
+                <div class="help-card">
                     <div class="help-icon">📝</div>
-                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">Умные Заметки</h4>
-                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">Быстро фиксируйте идеи на Рабочем столе. Нажмите <b>↗️</b> рядом с заметкой, чтобы в один клик превратить её в полноценную задачу с дедлайном и приоритетом.</p>
+                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">Заметки → задача</h4>
+                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">Быстрый ввод заметки и кнопка «Добавить». Иконка <b>↗️</b> превращает заметку в задачу с формой дедлайна и приоритета.</p>
                 </div>
                 <div class="help-card">
                     <div class="help-icon">🔥</div>
-                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">Фокус на главном</h4>
-                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">Назначайте задачам статус. Задачи с <b>«Высокой»</b> важностью получают стильное неоновое свечение. Вы никогда не упустите горящие дела из виду.</p>
+                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">Приоритет и статусы</h4>
+                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;"><b>Высокая</b> важность подсвечивает карточку. To Do показывает иконки «в работе», Wait — отдельный стиль. В Done при переносе запрашивается дата завершения.</p>
                 </div>
                 <div class="help-card">
-                    <div class="help-icon">🗓</div>
-                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">Живой Календарь</h4>
-                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">Календарь интерактивен! Нажимайте на любые даты в календаре — и список задач на Доске моментально отфильтруется по выбранному дню.</p>
+                    <div class="help-icon">📐</div>
+                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">Технические задания</h4>
+                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">Пункт навигации открывает <b>список ТЗ</b> (таблица, фильтры, 🔔 при неучтённых отзывах к опубликованной ссылке). Строка открывает <b>редактор</b>: схема на канве, вкладка «Описание» (автотекст + ваш текст), свойства узлов справа. Снизу панели: <b>Отзывы по ссылке</b> и <b>Журнал</b>. Публикация даёт гостю страницу <code style="font-size:11px;">tz-view.html?s=…</code>.</p>
+                </div>
+                <div class="help-card">
+                    <div class="help-icon">🔔</div>
+                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">Отзывы к опубликованным ТЗ</h4>
+                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">Гости комментируют по ссылке. Пока комментарий не помечен «учтённым», в таблице ТЗ горит индикатор, в меню задачника может появиться 🔔 и короткое уведомление.</p>
                 </div>
                 <div class="help-card">
                     <div class="help-icon">🤝</div>
-                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">Командная работа</h4>
-                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">Создавайте пространства для совместной работы. Приглашайте коллег по их уникальному нику (например, <i>Иван#A1B2C3</i>). Данные синхронизируются мгновенно.</p>
-                </div>
-                <div class="help-card">
-                    <div class="help-icon">👑</div>
-                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">Управление ролями</h4>
-                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">Создатель команды — Лидер. Нажав на должность участника в списке команды, лидер может назначить ему любую новую шуточную или серьезную роль.</p>
+                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">Команды</h4>
+                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">Создание команды, приглашение по нику <i>Имя#ТЕГ</i> (как в профиле). Общее пространство задач. Список участников раскрывается в карточке команды.</p>
                 </div>
                 <div class="help-card">
                     <div class="help-icon">📊</div>
-                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">Продвинутая аналитика</h4>
-                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">Перейдите во вкладку «Статистика», чтобы сгенерировать отчеты за любой период. Оценивайте продуктивность: сколько задач создано, а сколько выполнено.</p>
+                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">Статистика</h4>
+                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">Выбор пространства и периода, сводка и таблица по задачам.</p>
                 </div>
                 <div class="help-card">
-                    <div class="help-icon">🧲</div>
-                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">Перетаскивание статусов</h4>
-                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">Просто перетаскивайте карточку между секциями Plan / To Do / Wait / Done. При переносе в Done система попросит дату завершения.</p>
-                </div>
-                <div class="help-card">
-                    <div class="help-icon">🦫</div>
-                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">Животные эмодзи и эффекты</h4>
-                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">В задачах доступны эмодзи животных (включая капибару и геккона). To Do анимируется шестеренкой, Wait получает замороженный стиль, а срочные задачи выделяются неоновым оранжевым контуром.</p>
+                    <div class="help-icon">🌓</div>
+                    <h4 style="margin: 0 0 10px 0; font-size: 15px;">Тема и профиль</h4>
+                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">Переключатель светлой/тёмной темы запоминается. В профиле — отображаемое имя с тегом для приглашений.</p>
                 </div>
             </div>
         </div>
