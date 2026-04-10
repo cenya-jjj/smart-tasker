@@ -47,6 +47,8 @@
         .main-nav { display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
         .nav-link { background: none; border: none; color: var(--text-muted); font-size: 14px; font-weight: 600; cursor: pointer; padding: 8px 12px; border-radius: 8px; width: auto; margin: 0; }
         .nav-link.active { color: var(--primary); background: rgba(99, 102, 241, 0.1); }
+        .nav-tz-alarm { font-size: 13px; line-height: 1; }
+        .nav-tz-alarm.hidden { display: none !important; }
 
         .middle-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; align-items: start; }
         .notes-column, .calendar-column { background: var(--bg-body); border-radius: 16px; padding: 20px; border: 1px solid var(--border-color); display: flex; flex-direction: column; }
@@ -65,14 +67,15 @@
 
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-        .cal-day { background: var(--day-bg); border-radius: 8px; border: 1px solid var(--border-color); padding: 6px; min-height: 70px; color: var(--text-muted); font-size: 11px; display: flex; flex-direction: column; gap: 3px; cursor: pointer; align-items: stretch; }
+        .cal-day { background: var(--day-bg); border-radius: 8px; border: 1px solid var(--border-color); padding: 6px; height: 124px; min-height: 124px; max-height: 124px; color: var(--text-muted); font-size: 11px; display: flex; flex-direction: column; gap: 4px; cursor: pointer; align-items: stretch; overflow: hidden; box-sizing: border-box; }
         .cal-day.today { border-color: var(--danger-text); color: var(--danger-text); font-weight: bold; }
-        .cal-day-num { align-self: flex-end; line-height: 1.2; }
-        .cal-day-tasks { max-height: 92px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; min-height: 0; }
-        .cal-day-tasks::-webkit-scrollbar { width: 4px; }
-        .cal-day-tasks::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-        .cal-day-task { background: rgba(99, 102, 241, 0.12); color: var(--text-heading); font-size: 9px; padding: 2px 4px; border-radius: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-left: 2px solid var(--primary); cursor: default; }
-        .cal-day .btn-icon { margin-top: auto; align-self: flex-start; }
+        .cal-day-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 4px; width: 100%; flex-shrink: 0; }
+        .cal-day-num { line-height: 1.2; }
+        .cal-day-count { font-size: 9px; font-weight: 800; color: var(--primary); flex-shrink: 0; line-height: 1.2; }
+        .cal-day-tasks { flex: 1 1 auto; min-height: 0; max-height: 56px; overflow: hidden; display: flex; flex-direction: column; gap: 3px; }
+        .cal-day-task { background: rgba(99, 102, 241, 0.12); color: var(--text-heading); font-size: 10px; line-height: 1.2; padding: 2px 4px; border-radius: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-left: 2px solid var(--primary); cursor: default; }
+        .cal-day-more { font-size: 9px; letter-spacing: 3px; color: var(--text-muted); text-align: center; padding: 0; flex-shrink: 0; line-height: 1; }
+        .cal-day .btn-icon { margin-top: auto; align-self: flex-start; flex-shrink: 0; }
 
         .note-item { background: var(--bg-card); padding: 10px; margin-bottom: 10px; border-radius: 10px; font-size: 13px; display: flex; justify-content: space-between; border: 1px solid var(--border-color); }
         .btn-icon { background: none; border: none; padding: 3px; color: var(--text-muted); cursor: pointer; font-size: 14px; width: auto; margin: 0; }
@@ -113,7 +116,7 @@
         .board-filters-panel { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
         .board-filters-panel.hidden { display: none !important; }
         .board-filters-panel input, .board-filters-panel select { margin-bottom: 0 !important; }
-        .task-side-panel { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 14px; min-width: 360px; height: 100%; box-sizing: border-box; }
+        .task-side-panel { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 32px 18px 18px 32px; padding: 14px 16px 14px 18px; min-width: 360px; height: 100%; box-sizing: border-box; overflow: hidden; }
         .task-side-empty { color: var(--text-muted); font-size: 13px; }
         .task-side-panel.side-status-plan { border-color: var(--st-plan); }
         .task-side-panel.side-status-todo { border-color: var(--st-todo); }
@@ -212,7 +215,7 @@
                 <button class="nav-link" onclick="switchView('stats')">Статистика</button>
                 <button class="nav-link" onclick="switchView('teams')">Команды</button>
                 <button class="nav-link" onclick="switchView('help')">📖 Справка</button>
-                <a href="tz.html" class="nav-link" style="text-decoration:none; display:inline-block;">📋 Технические задания</a>
+                <a href="tz.html" class="nav-link" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;"><span>📋 Технические задания</span><span id="nav-tz-badge" class="nav-tz-alarm hidden" title="Есть неучтённые отзывы по опубликованным ТЗ">🔔</span></a>
             </div>
             <div style="display: flex; align-items: center; gap: 12px;">
                 <div class="profile-btn" onclick="openProfileModal()" style="cursor:pointer; font-weight:600; padding: 6px 12px; font-size: 14px; display: flex; align-items: center; gap: 8px; background: var(--bg-body); border-radius: 8px; border: 1px solid var(--border-color);">
@@ -484,7 +487,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendEmailVerification, updateProfile, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { collection, addDoc, updateDoc, query, where, onSnapshot, deleteDoc, doc, initializeFirestore, setDoc, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { collection, addDoc, updateDoc, query, where, orderBy, onSnapshot, deleteDoc, doc, initializeFirestore, setDoc, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDXGtaGi0uqnmEox06KNJKzaV7WD5pdyuY",
@@ -500,6 +503,9 @@
         const db = initializeFirestore(app, { experimentalForceLongPolling: true });
 
         let allItems = []; let myTeams = []; let currentDate = new Date(); let currentSpace = 'personal'; let unsubTasks = []; let unsubUserDoc = null; let selectedTaskId = null;
+        let tzSpecsFeedbackUnsub = null;
+        const indexTzPendingByToken = new Map();
+        let tzCommentFeedbackUnsubs = [];
         let flashMembersByTeam = {};
         const tagPattern = /^[A-Z0-9]{6}$/;
         const escapeHtml = (s) => { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; };
@@ -554,6 +560,58 @@
             setTimeout(() => fx.classList.remove('show'), 180);
             showToast("Флешка", "Системная вспышка отправлена");
         };
+        function recalcNavTzBadge() {
+            let t = 0;
+            indexTzPendingByToken.forEach(v => { t += v; });
+            const el = document.getElementById('nav-tz-badge');
+            if (el) el.classList.toggle('hidden', t === 0);
+        }
+
+        function stopTzGuestFeedbackWatch() {
+            tzCommentFeedbackUnsubs.forEach(u => u());
+            tzCommentFeedbackUnsubs = [];
+            indexTzPendingByToken.clear();
+            if (tzSpecsFeedbackUnsub) {
+                tzSpecsFeedbackUnsub();
+                tzSpecsFeedbackUnsub = null;
+            }
+            recalcNavTzBadge();
+        }
+
+        function startTzGuestFeedbackWatch(ownerUid) {
+            stopTzGuestFeedbackWatch();
+            tzSpecsFeedbackUnsub = onSnapshot(query(collection(db, 'tzSpecs'), where('userId', '==', ownerUid)), snap => {
+                tzCommentFeedbackUnsubs.forEach(u => u());
+                tzCommentFeedbackUnsubs = [];
+                indexTzPendingByToken.clear();
+                snap.forEach(docSnap => {
+                    const token = docSnap.data().shareToken;
+                    if (!token) return;
+                    const cref = query(collection(db, 'tzShares', token, 'comments'), orderBy('createdAt', 'asc'));
+                    tzCommentFeedbackUnsubs.push(onSnapshot(cref, qs => {
+                        qs.docChanges().forEach(ch => {
+                            if (ch.type === 'added' && !ch.doc.data().resolved) {
+                                showToast('Отзыв к ТЗ', 'Новый комментарий по опубликованному заданию. Откройте «Технические задания».');
+                            }
+                        });
+                        let n = 0;
+                        qs.forEach(d => { if (!d.data().resolved) n++; });
+                        indexTzPendingByToken.set(token, n);
+                        recalcNavTzBadge();
+                        if (!sessionStorage.getItem('tzPendingSessionHint')) {
+                            let sum = 0;
+                            indexTzPendingByToken.forEach(v => { sum += v; });
+                            if (sum > 0) {
+                                sessionStorage.setItem('tzPendingSessionHint', '1');
+                                showToast('Отзывы к ТЗ', 'Есть неучтённые отзывы по ссылке. Откройте «Технические задания».');
+                            }
+                        }
+                    }));
+                });
+                recalcNavTzBadge();
+            });
+        }
+
         const setupUserFlashListener = (uid) => {
             if(unsubUserDoc) unsubUserDoc();
             unsubUserDoc = onSnapshot(doc(db, "users", uid), snap => {
@@ -691,10 +749,14 @@
                 }
                 setupUserFlashListener(user.uid);
                 fetchTeams(user.uid);
+                startTzGuestFeedbackWatch(user.uid);
             } else {
                 document.getElementById('auth-wrapper').classList.remove('hidden');
                 document.getElementById('dashboard-wrapper').classList.add('hidden');
                 if(unsubUserDoc) { unsubUserDoc(); unsubUserDoc = null; }
+                stopTzGuestFeedbackWatch();
+                const nb = document.getElementById('nav-tz-badge');
+                if (nb) nb.classList.add('hidden');
             }
         });
 
@@ -732,14 +794,6 @@
                             <div style="min-width:0; flex:1;">
                                 <b>${escapeHtml(t.name)}</b>
                                 <div style="font-size:11px; color:var(--text-muted);">Участников: ${(t.members || []).length}</div>
-                                <div style="font-size:10px; color:var(--text-muted); margin-top:8px; line-height:1.5;" title="Типовые объекты конфигурации 1С (ориентир для ТЗ и обсуждений)">
-                                    <span title="Справочник">📁</span>
-                                    <span title="Документ">📄</span>
-                                    <span title="Регистр сведений">📊</span>
-                                    <span title="Отчёт">📈</span>
-                                    <span title="Обработка / регистр накопления">⚙️</span>
-                                    <span style="margin-left:6px;">метаданные 1С</span>
-                                </div>
                             </div>
                             <div style="display:flex; gap:8px; flex-shrink:0;">
                                 <button class="btn-secondary" style="width:auto; padding:5px 10px;" onclick="inviteUser('${t.id}')">Пригласить</button>
@@ -1047,13 +1101,18 @@
             let start = first === 0 ? 6 : first - 1;
             const todayStr = new Date().toLocaleDateString('en-CA');
             for(let i=0; i<start; i++) grid.innerHTML += `<div class="cal-day" style="opacity:0; pointer-events:none;"></div>`;
+            const calVisibleLines = 4;
+            const calTitleMax = 16;
             for(let d=1; d<=days; d++) {
                 const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 const tsks = allItems.filter(i => i.itemType==='task' && i.dueDate === ds && i.space === currentSpace);
+                const nAll = tsks.length;
+                const countBadge = nAll > 0 ? `<span class="cal-day-count" title="Задач: ${nAll}">${nAll}</span>` : '';
+                const slice = tsks.slice(0, calVisibleLines);
                 let th = '';
-                const calTitleMax = 22;
-                tsks.forEach(t => { th += `<div class="cal-day-task" title="${attrEscape(t.title)}">${escapeHtml(truncateText(t.title, calTitleMax))}</div>`; });
-                grid.innerHTML += `<div class="cal-day ${ds === todayStr ? 'today' : ''}" onclick="selectDateFilter('${ds}')" ondragover="allowDropTask(event)" ondrop="dropTaskToDate(event,'${ds}')"><span class="cal-day-num">${d}</span><div class="cal-day-tasks">${th}</div><button class="btn-icon" style="font-size:10px;" onclick="event.stopPropagation(); openTaskModalByDate('${ds}')">+ задача</button></div>`;
+                slice.forEach(t => { th += `<div class="cal-day-task" title="${attrEscape(t.title)}">${escapeHtml(truncateText(t.title, calTitleMax))}</div>`; });
+                const more = nAll > calVisibleLines ? `<div class="cal-day-more" title="Ещё ${nAll - calVisibleLines} задач(и)">•••</div>` : '';
+                grid.innerHTML += `<div class="cal-day ${ds === todayStr ? 'today' : ''}" onclick="selectDateFilter('${ds}')" ondragover="allowDropTask(event)" ondrop="dropTaskToDate(event,'${ds}')"><div class="cal-day-head"><span class="cal-day-num">${d}</span>${countBadge}</div><div class="cal-day-tasks">${th}</div>${more}<button class="btn-icon" style="font-size:10px;" onclick="event.stopPropagation(); openTaskModalByDate('${ds}')">+ задача</button></div>`;
             }
             syncNotesHeight();
         };

@@ -108,6 +108,30 @@
         .guest-comment-editor .gc-text { font-size: 12px; white-space: pre-wrap; word-break: break-word; margin-bottom: 8px; }
         .guest-comment-editor textarea { width: 100%; min-height: 56px; font-size: 11px; padding: 8px; margin-bottom: 6px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-heading); resize: vertical; }
         .guest-comment-editor .gc-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 11px; }
+        .tz-list-page { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; background: var(--bg-body); }
+        .tz-list-header { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid var(--border-color); background: var(--bg-card); flex-wrap: wrap; gap: 10px; }
+        .tz-list-header h1 { font-size: 18px; color: var(--text-heading); }
+        .tz-list-header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .tz-list-header-actions button { width: auto; margin: 0; }
+        .tz-list-body { flex: 1; min-height: 0; overflow: auto; padding: 16px 20px 24px; max-width: 1200px; width: 100%; margin: 0 auto; box-sizing: border-box; }
+        .tz-table-full { max-height: none; flex: 1; min-height: 280px; }
+        .tz-editor-page { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+        .editor-tabs-bar { flex-shrink: 0; display: flex; gap: 4px; padding: 6px 12px; border-bottom: 1px solid var(--border-color); background: var(--bg-card); }
+        .editor-tab { cursor: pointer; padding: 8px 14px; font-size: 12px; font-weight: 600; font-family: inherit; border: none; border-radius: 8px; background: transparent; color: var(--text-muted); }
+        .editor-tab:hover { color: var(--text-main); background: rgba(99,102,241,0.08); }
+        .editor-tab.active { color: var(--primary); background: rgba(99,102,241,0.12); }
+        .editor-pane { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+        .editor-pane.hidden { display: none !important; }
+        .tz-desc-split-editor { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0; overflow: hidden; }
+        @media (max-width: 900px) { .tz-desc-split-editor { grid-template-columns: 1fr; grid-template-rows: minmax(200px, 1fr) minmax(200px, 1fr); } }
+        .tz-desc-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 10px 12px; border-right: 1px solid var(--border-color); overflow: hidden; }
+        .tz-desc-col:last-child { border-right: none; }
+        @media (max-width: 900px) { .tz-desc-col { border-right: none; border-bottom: 1px solid var(--border-color); } .tz-desc-col:last-child { border-bottom: none; } }
+        .tz-desc-col .tz-schema-dump { max-height: none; flex: 1; min-height: 120px; }
+        .tz-desc-col .tz-manual-area { flex: 1; min-height: 160px; }
+        .tz-alarm { color: #f59e0b; font-size: 12px; }
+        .tz-guest-badge { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(245, 158, 11, 0.2); color: #fbbf24; font-size: 11px; font-weight: 700; }
+        .tz-guest-badge.hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -116,22 +140,19 @@
         <a href="index.html" class="back-link">Перейти ко входу</a>
     </div>
 
-    <div id="app-root" class="hidden">
-        <header class="top-bar">
-            <div style="display:flex; align-items:center; gap:16px;">
-                <a href="index.html" class="back-link">← К задачнику</a>
-                <h1>Технические задания</h1>
-            </div>
-            <div class="top-actions">
-                <button type="button" class="btn-secondary" onclick="document.body.classList.toggle('light-theme'); localStorage.setItem('theme', document.body.classList.contains('light-theme')?'light':'dark');">🌓</button>
-                <button type="button" class="btn-secondary" onclick="openShareModal()">Поделиться</button>
-                <button type="button" onclick="saveCurrentTz()">Сохранить</button>
-            </div>
-        </header>
-        <div class="layout">
-            <aside class="sidebar">
-                <h3>Мои ТЗ</h3>
-                <button type="button" onclick="createNewTz()" style="width:100%; margin-bottom:12px;">+ Новое ТЗ</button>
+    <div id="app-root" class="hidden" style="flex-direction:column;">
+        <div id="tz-list-page" class="tz-list-page hidden">
+            <header class="tz-list-header">
+                <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                    <a href="index.html" class="back-link">← К задачнику</a>
+                    <h1>Технические задания</h1>
+                </div>
+                <div class="tz-list-header-actions">
+                    <button type="button" class="btn-secondary" onclick="document.body.classList.toggle('light-theme'); localStorage.setItem('theme', document.body.classList.contains('light-theme')?'light':'dark');">🌓</button>
+                    <button type="button" onclick="createNewTz()">+ Новое ТЗ</button>
+                </div>
+            </header>
+            <div class="tz-list-body">
                 <div class="tz-list-toolbar">
                     <input type="search" id="tz-filter-search" placeholder="Поиск по названию…" aria-label="Поиск по названию" autocomplete="off">
                     <select id="tz-filter-status" aria-label="Фильтр по статусу">
@@ -143,10 +164,12 @@
                     </select>
                     <input type="search" id="tz-filter-author" placeholder="Фильтр по автору…" aria-label="Фильтр по автору" autocomplete="off">
                 </div>
-                <div class="tz-table-wrap">
+                <p id="tz-list-empty-hint" class="hidden" style="font-size:13px;color:var(--text-muted);margin:0 0 10px;">Пока нет ТЗ — нажмите «Новое ТЗ».</p>
+                <div class="tz-table-wrap tz-table-full">
                     <table class="tz-spec-table">
                         <thead>
                             <tr>
+                                <th style="width:32px;" title="Есть неучтённые отзывы">!</th>
                                 <th>Название</th>
                                 <th>Статус</th>
                                 <th>Автор</th>
@@ -156,68 +179,111 @@
                         <tbody id="tz-table-body"></tbody>
                     </table>
                 </div>
-                <h3 style="margin-top:16px;">Элементы (на канву)</h3>
-                <p style="font-size:11px; color:var(--text-muted); margin:0 0 8px;">Клик по типу — добавить в центр канвы</p>
-                <div class="palette-item" data-kind="catalog" onclick="addNode('catalog')">📁 Справочник</div>
-                <div class="palette-item" data-kind="document" onclick="addNode('document')">📄 Документ</div>
-                <div class="palette-item" data-kind="register" onclick="addNode('register')">📊 Регистр сведений</div>
-                <div class="palette-item" data-kind="report" onclick="addNode('report')">📈 Отчёт</div>
-                <div class="palette-item" data-kind="note" onclick="addNode('note')">💬 Примечание</div>
-                <h3 style="margin-top:14px;">Публикация</h3>
-                <p style="font-size:11px;color:var(--text-muted);margin:0 0 8px;line-height:1.4;">Доступ только по ссылке. Не открывает задачник и другие ТЗ.</p>
-                <button type="button" class="btn-secondary" style="width:100%;" onclick="openShareModal()">Ссылка для просмотра</button>
-                <div id="share-sidebar-status" class="hidden" style="margin-top:10px;">
-                    <span style="font-size:11px;color:var(--primary);font-weight:600;">Ссылка активна</span>
-                    <button type="button" class="btn-secondary" style="width:100%;margin-top:6px;padding:8px;font-size:11px;" onclick="copyShareLink()">Копировать ссылку</button>
-                </div>
-                <h3 style="margin-top:14px;">Отзывы по ссылке</h3>
-                <div id="guest-comments-wrap" style="max-height:240px;overflow-y:auto;"></div>
-            </aside>
-            <main class="main">
-                <div class="toolbar">
-                    <label class="small" style="margin:0;">Название ТЗ</label>
-                    <input type="text" id="tz-title" placeholder="Например: Документ приходная накладная">
-                    <label class="small" style="margin:0;">Статус</label>
-                    <select id="tz-status">
-                        <option value="draft">Черновик</option>
-                        <option value="review">Согласование</option>
-                        <option value="sent">Отправлено</option>
-                        <option value="done">Выполнено</option>
-                    </select>
-                </div>
-                <div class="canvas-wrap" id="canvas-wrap">
-                    <div class="canvas-inner" id="canvas-inner">
-                        <svg class="tz-svg" id="tz-svg"></svg>
-                        <div id="nodes-layer"></div>
-                    </div>
-                </div>
-            </main>
-            <aside class="props" id="props-panel">
-                <h3 id="props-heading">Объект не выбран</h3>
-                <div id="props-empty" style="font-size:13px; color:var(--text-muted);">Выберите узел на схеме</div>
-                <div id="props-form" class="hidden">
-                    <label class="small">Имя объекта</label>
-                    <input type="text" id="prop-name">
-                    <label class="small">Реквизиты шапки</label>
-                    <div id="requisites-list"></div>
-                    <button type="button" class="btn-secondary" style="width:100%;" onclick="addRequisite()">+ Реквизит</button>
-                    <p style="font-size:11px; color:var(--text-muted); margin-top:12px;">Тип «Ссылка» создаёт линию к другому объекту на схеме.</p>
-                </div>
-            </aside>
-        </div>
-        <div id="tz-log-drawer" class="tz-log-drawer collapsed">
-            <div class="tz-log-handle" onclick="toggleTzLogDrawer()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')toggleTzLogDrawer()">
-                <span>Журнал и текстовая модель <span class="muted">авто из схемы + ваш текст</span></span>
-                <span class="tz-log-chevron">▲</span>
             </div>
-            <div class="tz-log-body">
-                <div class="tz-log-actions">
-                    <button type="button" class="btn-secondary" onclick="copyTzFullText()">Копировать всё</button>
+        </div>
+
+        <div id="tz-editor-page" class="tz-editor-page hidden">
+            <header class="top-bar">
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <a href="#" class="back-link" onclick="event.preventDefault(); showTzListView();">← К списку ТЗ</a>
+                    <a href="index.html" class="back-link">К задачнику</a>
+                    <h1 style="margin:0; font-size:17px;">Редактор ТЗ</h1>
                 </div>
-                <p class="tz-log-label">Сформировано из схемы (обновляется при изменениях)</p>
-                <pre id="tz-schema-text" class="tz-schema-dump"></pre>
-                <p class="tz-log-label">Ваш текст — оформление, условия, письмо для отправки</p>
-                <textarea id="tz-text-manual" class="tz-manual-area" placeholder="Пишите здесь вручную: вводные, согласования, кому отправить, сроки…"></textarea>
+                <div class="top-actions">
+                    <button type="button" class="btn-secondary" onclick="document.body.classList.toggle('light-theme'); localStorage.setItem('theme', document.body.classList.contains('light-theme')?'light':'dark');">🌓</button>
+                    <button type="button" class="btn-secondary" onclick="createNewTz()">+ Новое ТЗ</button>
+                    <button type="button" class="btn-secondary" onclick="openShareModal()">Поделиться</button>
+                    <button type="button" onclick="saveCurrentTz()">Сохранить</button>
+                </div>
+            </header>
+            <div class="layout">
+                <aside class="sidebar">
+                    <h3>Элементы (на канву)</h3>
+                    <p style="font-size:11px; color:var(--text-muted); margin:0 0 8px;">Клик по типу — добавить в центр канвы</p>
+                    <div class="palette-item" data-kind="catalog" onclick="addNode('catalog')">📁 Справочник</div>
+                    <div class="palette-item" data-kind="document" onclick="addNode('document')">📄 Документ</div>
+                    <div class="palette-item" data-kind="register" onclick="addNode('register')">📊 Регистр сведений</div>
+                    <div class="palette-item" data-kind="report" onclick="addNode('report')">📈 Отчёт</div>
+                    <div class="palette-item" data-kind="note" onclick="addNode('note')">💬 Примечание</div>
+                    <h3 style="margin-top:14px;">Публикация</h3>
+                    <p style="font-size:11px;color:var(--text-muted);margin:0 0 8px;line-height:1.4;">Доступ только по ссылке. Не открывает задачник и другие ТЗ.</p>
+                    <button type="button" class="btn-secondary" style="width:100%;" onclick="openShareModal()">Ссылка для просмотра</button>
+                    <div id="share-sidebar-status" class="hidden" style="margin-top:10px;">
+                        <span style="font-size:11px;color:var(--primary);font-weight:600;">Ссылка активна</span>
+                        <button type="button" class="btn-secondary" style="width:100%;margin-top:6px;padding:8px;font-size:11px;" onclick="copyShareLink()">Копировать ссылку</button>
+                    </div>
+                </aside>
+                <main class="main">
+                    <div class="toolbar">
+                        <label class="small" style="margin:0;">Название ТЗ</label>
+                        <input type="text" id="tz-title" placeholder="Например: Документ приходная накладная">
+                        <label class="small" style="margin:0;">Статус</label>
+                        <select id="tz-status">
+                            <option value="draft">Черновик</option>
+                            <option value="review">Согласование</option>
+                            <option value="sent">Отправлено</option>
+                            <option value="done">Выполнено</option>
+                        </select>
+                    </div>
+                    <div class="editor-tabs-bar" role="tablist">
+                        <button type="button" class="editor-tab active" role="tab" data-editor-tab="scheme" aria-selected="true">Схема</button>
+                        <button type="button" class="editor-tab" role="tab" data-editor-tab="desc" aria-selected="false">Описание</button>
+                    </div>
+                    <div id="editor-pane-scheme" class="editor-pane">
+                        <div class="canvas-wrap" id="canvas-wrap">
+                            <div class="canvas-inner" id="canvas-inner">
+                                <svg class="tz-svg" id="tz-svg"></svg>
+                                <div id="nodes-layer"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="editor-pane-desc" class="editor-pane hidden">
+                        <div class="tz-desc-split-editor">
+                            <div class="tz-desc-col">
+                                <p class="tz-log-label">Сформировано из схемы</p>
+                                <pre class="tz-schema-dump tz-schema-sync" id="tz-schema-text-tab"></pre>
+                            </div>
+                            <div class="tz-desc-col">
+                                <p class="tz-log-label">Ваш текст — оформление, условия, письмо</p>
+                                <textarea id="tz-text-manual" class="tz-manual-area" placeholder="Пишите здесь вручную: вводные, согласования, кому отправить, сроки…"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                <aside class="props" id="props-panel">
+                    <h3 id="props-heading">Объект не выбран</h3>
+                    <div id="props-empty" style="font-size:13px; color:var(--text-muted);">Выберите узел на схеме</div>
+                    <div id="props-form" class="hidden">
+                        <label class="small">Имя объекта</label>
+                        <input type="text" id="prop-name">
+                        <label class="small">Реквизиты шапки</label>
+                        <div id="requisites-list"></div>
+                        <button type="button" class="btn-secondary" style="width:100%;" onclick="addRequisite()">+ Реквизит</button>
+                        <p style="font-size:11px; color:var(--text-muted); margin-top:12px;">Тип «Ссылка» создаёт линию к другому объекту на схеме.</p>
+                    </div>
+                </aside>
+            </div>
+            <div id="tz-guest-drawer" class="tz-log-drawer collapsed">
+                <div class="tz-log-handle" onclick="toggleTzGuestDrawer()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')toggleTzGuestDrawer()">
+                    <span>Отзывы по ссылке <span id="tz-guest-drawer-badge" class="tz-guest-badge hidden">не учтено</span><span class="muted" style="margin-left:6px;">гости по опубликованной ссылке</span></span>
+                    <span class="tz-guest-chevron">▲</span>
+                </div>
+                <div class="tz-log-body" style="overflow-y:auto; max-height:min(40vh,360px);">
+                    <div id="guest-comments-wrap"></div>
+                </div>
+            </div>
+            <div id="tz-log-drawer" class="tz-log-drawer collapsed">
+                <div class="tz-log-handle" onclick="toggleTzLogDrawer()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')toggleTzLogDrawer()">
+                    <span>Журнал <span class="muted">копия авто-текста из схемы (нижняя панель)</span></span>
+                    <span class="tz-log-chevron">▲</span>
+                </div>
+                <div class="tz-log-body">
+                    <div class="tz-log-actions">
+                        <button type="button" class="btn-secondary" onclick="copyTzFullText()">Копировать всё</button>
+                    </div>
+                    <p class="tz-log-label">Сформировано из схемы</p>
+                    <pre id="tz-schema-text" class="tz-schema-dump tz-schema-sync"></pre>
+                </div>
             </div>
         </div>
     </div>
@@ -228,7 +294,7 @@
             <p>Гость откроет отдельную страницу со снимком схемы и текстовой модели. Вход в Смарт Задачник не нужен. У кого нет ссылки — доступа нет.</p>
             <label class="modal-check">
                 <input type="checkbox" id="share-allow-comments" checked>
-                <span>Разрешить гостям комментарии и текстовые правки в боковой колонке (им не редактируется сама схема в редакторе).</span>
+                <span>Разрешить гостям комментарии (нижняя панель «Отзывы по ссылке» в редакторе; схему гость не меняет).</span>
             </label>
             <div class="modal-actions">
                 <button type="button" class="btn-secondary" onclick="closeShareModal()">Отмена</button>
@@ -269,6 +335,8 @@
         let dragState = null;
         let listUnsub = null;
         let tzTableDocs = [];
+        let listCommentUnsubs = [];
+        const pendingBySpecId = new Map();
         let tzBootstrapped = false;
         let schemaTextDebounce = null;
         let activeShareToken = null;
@@ -479,6 +547,7 @@
                     box.appendChild(row);
                     wrap.appendChild(box);
                 });
+                updateGuestDrawerHandle();
             }, () => {
                 wrap.innerHTML = '<p style="font-size:11px;color:var(--danger-text);">Нет доступа к комментариям. Добавьте правила Firestore из tz-share.firestore.rules</p>';
             });
@@ -486,14 +555,29 @@
 
         function initLogDrawer() {
             const d = document.getElementById('tz-log-drawer');
-            if (!d) return;
-            if (localStorage.getItem('tzLogDrawerOpen') === '1') {
+            if (d && localStorage.getItem('tzLogDrawerOpen') === '1') {
                 d.classList.remove('collapsed');
                 const chev = d.querySelector('.tz-log-chevron');
                 if (chev) chev.textContent = '▼';
             }
+            const g = document.getElementById('tz-guest-drawer');
+            if (g && localStorage.getItem('tzGuestDrawerOpen') === '1') {
+                g.classList.remove('collapsed');
+                const chev = g.querySelector('.tz-guest-chevron');
+                if (chev) chev.textContent = '▼';
+            }
         }
         initLogDrawer();
+
+        window.toggleTzGuestDrawer = function () {
+            const d = document.getElementById('tz-guest-drawer');
+            if (!d) return;
+            d.classList.toggle('collapsed');
+            const open = !d.classList.contains('collapsed');
+            localStorage.setItem('tzGuestDrawerOpen', open ? '1' : '0');
+            const chev = d.querySelector('.tz-guest-chevron');
+            if (chev) chev.textContent = open ? '▼' : '▲';
+        };
 
         window.toggleTzLogDrawer = function () {
             const d = document.getElementById('tz-log-drawer');
@@ -505,6 +589,22 @@
             if (chev) chev.textContent = open ? '▼' : '▲';
             if (open) scheduleSchemaTextRefresh();
         };
+
+        function updateGuestDrawerHandle() {
+            const b = document.getElementById('tz-guest-drawer-badge');
+            if (!b) return;
+            if (!currentId) {
+                b.classList.add('hidden');
+                return;
+            }
+            const n = pendingBySpecId.get(currentId) || 0;
+            if (n > 0) {
+                b.textContent = n + ' не учт.';
+                b.classList.remove('hidden');
+            } else {
+                b.classList.add('hidden');
+            }
+        }
 
         window.copyTzFullText = function () {
             const auto = document.getElementById('tz-schema-text')?.textContent || '';
@@ -567,8 +667,8 @@
         }
 
         function refreshSchemaTextNow() {
-            const el = document.getElementById('tz-schema-text');
-            if (el) el.textContent = buildAutoSchemaText();
+            const t = buildAutoSchemaText();
+            document.querySelectorAll('.tz-schema-sync').forEach(el => { el.textContent = t; });
         }
 
         function scheduleSchemaTextRefresh() {
@@ -582,8 +682,25 @@
         (function bindToolbarSchemaRefresh() {
             const t = document.getElementById('tz-title');
             const s = document.getElementById('tz-status');
+            const tm = document.getElementById('tz-text-manual');
             if (t) t.addEventListener('input', scheduleSchemaTextRefresh);
             if (s) s.addEventListener('change', scheduleSchemaTextRefresh);
+            if (tm) tm.addEventListener('input', scheduleSchemaTextRefresh);
+        })();
+
+        (function bindEditorTabs() {
+            document.querySelectorAll('.editor-tab').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tab = btn.dataset.editorTab;
+                    document.querySelectorAll('.editor-tab').forEach(b => {
+                        b.classList.toggle('active', b === btn);
+                        b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+                    });
+                    document.getElementById('editor-pane-scheme').classList.toggle('hidden', tab !== 'scheme');
+                    document.getElementById('editor-pane-desc').classList.toggle('hidden', tab !== 'desc');
+                    if (tab === 'scheme') requestAnimationFrame(() => renderEdges());
+                });
+            });
         })();
 
         function uidShort() { return 'n' + Math.random().toString(36).slice(2, 9); }
@@ -592,7 +709,58 @@
             document.getElementById('auth-gate').classList.add('hidden');
             document.getElementById('app-root').classList.remove('hidden');
             document.getElementById('app-root').style.display = 'flex';
+            document.getElementById('app-root').style.flexDirection = 'column';
         }
+
+        function stopListCommentWatchers() {
+            listCommentUnsubs.forEach(u => u());
+            listCommentUnsubs = [];
+        }
+
+        function startListCommentWatchers() {
+            stopListCommentWatchers();
+            pendingBySpecId.clear();
+            tzTableDocs.forEach(({ id, data }) => {
+                const token = data.shareToken;
+                if (!token) {
+                    pendingBySpecId.set(id, 0);
+                    return;
+                }
+                const q = query(collection(db, 'tzShares', token, 'comments'), orderBy('createdAt', 'asc'));
+                listCommentUnsubs.push(onSnapshot(q, (snap) => {
+                    let n = 0;
+                    snap.forEach(d => {
+                        if (!d.data().resolved) n++;
+                    });
+                    pendingBySpecId.set(id, n);
+                    renderTzTable();
+                    updateGuestDrawerHandle();
+                }, () => {}));
+            });
+            renderTzTable();
+        }
+
+        function showListView() {
+            history.replaceState(null, '', location.pathname);
+            document.getElementById('tz-list-page')?.classList.remove('hidden');
+            document.getElementById('tz-editor-page')?.classList.add('hidden');
+            stopGuestComments();
+        }
+
+        function showEditorView() {
+            document.getElementById('tz-list-page')?.classList.add('hidden');
+            document.getElementById('tz-editor-page')?.classList.remove('hidden');
+        }
+
+        window.showTzListView = showListView;
+
+        window.openTzEditor = function (id) {
+            const row = tzTableDocs.find(x => x.id === id);
+            if (!row) return;
+            history.replaceState(null, '', `${location.pathname}?open=${encodeURIComponent(id)}`);
+            showEditorView();
+            loadTz(id, row.data);
+        };
         function showGate() {
             document.getElementById('auth-gate').classList.remove('hidden');
             document.getElementById('app-root').classList.add('hidden');
@@ -607,6 +775,8 @@
         function renderTzTable() {
             const tbody = document.getElementById('tz-table-body');
             if (!tbody) return;
+            const emptyHint = document.getElementById('tz-list-empty-hint');
+            if (emptyHint) emptyHint.classList.toggle('hidden', tzTableDocs.length > 0);
             const qTitle = (document.getElementById('tz-filter-search')?.value || '').trim().toLowerCase();
             const st = document.getElementById('tz-filter-status')?.value || 'all';
             const qAuthor = (document.getElementById('tz-filter-author')?.value || '').trim().toLowerCase();
@@ -621,7 +791,16 @@
                 const tr = document.createElement('tr');
                 tr.className = 'tz-table-row' + (id === currentId ? ' tz-row-active' : '');
                 tr.dataset.docId = id;
-                tr.onclick = () => loadTz(id, data);
+                tr.onclick = () => window.openTzEditor(id);
+                const tdAlarm = document.createElement('td');
+                const pend = pendingBySpecId.get(id) || 0;
+                if (pend > 0) {
+                    const sp = document.createElement('span');
+                    sp.className = 'tz-alarm';
+                    sp.title = 'Есть отзывы, не помеченные как учтённые';
+                    sp.textContent = '🔔';
+                    tdAlarm.appendChild(sp);
+                }
                 const tdTitle = document.createElement('td');
                 tdTitle.className = 'tz-title-cell';
                 tdTitle.title = title;
@@ -643,7 +822,7 @@
                     window.deleteTzById(id);
                 };
                 tdAct.appendChild(delBtn);
-                tr.append(tdTitle, tdStatus, tdAuthor, tdAct);
+                tr.append(tdAlarm, tdTitle, tdStatus, tdAuthor, tdAct);
                 tbody.appendChild(tr);
             });
         }
@@ -685,9 +864,7 @@
                     currentId = null;
                     activeShareToken = null;
                     stopGuestComments();
-                    const q2 = await getDocs(query(collection(db, 'tzSpecs'), where('userId', '==', uid)));
-                    if (q2.empty) await window.createNewTz();
-                    else loadTz(q2.docs[0].id, q2.docs[0].data());
+                    showTzListView();
                 }
             } catch (e) {
                 alert('Не удалось удалить: ' + (e.message || e));
@@ -715,12 +892,23 @@
                     });
                     renderTzTable();
                     refreshListActive();
+                    startListCommentWatchers();
                 });
                 if (!tzBootstrapped) {
                     tzBootstrapped = true;
-                    const q = await getDocs(query(collection(db, 'tzSpecs'), where('userId', '==', uid)));
-                    if (q.empty) await window.createNewTz();
-                    else loadTz(q.docs[0].id, q.docs[0].data());
+                    const params = new URLSearchParams(location.search);
+                    const openId = (params.get('open') || '').trim();
+                    if (openId) {
+                        const dref = await getDoc(doc(db, 'tzSpecs', openId));
+                        if (dref.exists() && dref.data().userId === uid) {
+                            showEditorView();
+                            loadTz(openId, dref.data());
+                        } else {
+                            showListView();
+                        }
+                    } else {
+                        showListView();
+                    }
                 }
             } else {
                 uid = null;
@@ -732,6 +920,7 @@
                 selectedId = null;
                 tzBootstrapped = false;
                 if (listUnsub) { listUnsub(); listUnsub = null; }
+                stopListCommentWatchers();
                 tzTableDocs = [];
                 const tb = document.getElementById('tz-table-body');
                 if (tb) tb.innerHTML = '';
@@ -769,6 +958,8 @@
             refreshSchemaTextNow();
             updateShareSidebar();
             startGuestComments(null);
+            history.replaceState(null, '', `${location.pathname}?open=${encodeURIComponent(ref.id)}`);
+            showEditorView();
         };
 
         function loadTz(id, data) {
@@ -789,6 +980,7 @@
             scheduleSchemaTextRefresh();
             updateShareSidebar();
             startGuestComments(activeShareToken);
+            updateGuestDrawerHandle();
         }
 
         window.saveCurrentTz = async () => {
@@ -837,7 +1029,7 @@
 
         window.addNode = (kind) => {
             if (!currentId) {
-                alert('Сначала создайте ТЗ кнопкой «Новое ТЗ»');
+                alert('Откройте ТЗ из списка или создайте новое.');
                 return;
             }
             const id = uidShort();
