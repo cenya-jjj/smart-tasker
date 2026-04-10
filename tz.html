@@ -77,6 +77,21 @@
         .tz-manual-area { flex: 1; min-height: 140px; width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-heading); font-size: 13px; line-height: 1.5; resize: vertical; font-family: 'Inter', sans-serif; box-sizing: border-box; }
         .tz-log-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         .tz-log-actions button { width: auto; margin: 0; padding: 6px 12px; font-size: 12px; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.72); z-index: 3000; display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); }
+        .modal-overlay.hidden { display: none !important; }
+        .modal-box { background: var(--bg-card); border-radius: 16px; padding: 22px; max-width: 460px; width: 100%; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto; }
+        .modal-box h2 { margin: 0 0 12px; font-size: 18px; color: var(--text-heading); }
+        .modal-box p { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0 0 14px; }
+        .modal-check { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 16px; font-size: 13px; }
+        .modal-check input { width: auto; margin: 4px 0 0; }
+        .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+        .modal-actions button { width: auto; margin: 0; }
+        .share-link-field { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-heading); font-size: 12px; margin-top: 10px; }
+        .guest-comment-editor { border: 1px solid var(--border-color); border-radius: 10px; padding: 8px; margin-bottom: 10px; background: var(--bg-body); }
+        .guest-comment-editor .gc-head { font-size: 10px; color: var(--text-muted); margin-bottom: 6px; }
+        .guest-comment-editor .gc-text { font-size: 12px; white-space: pre-wrap; word-break: break-word; margin-bottom: 8px; }
+        .guest-comment-editor textarea { width: 100%; min-height: 56px; font-size: 11px; padding: 8px; margin-bottom: 6px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-heading); resize: vertical; }
+        .guest-comment-editor .gc-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -93,6 +108,7 @@
             </div>
             <div class="top-actions">
                 <button type="button" class="btn-secondary" onclick="document.body.classList.toggle('light-theme'); localStorage.setItem('theme', document.body.classList.contains('light-theme')?'light':'dark');">🌓</button>
+                <button type="button" class="btn-secondary" onclick="openShareModal()">Поделиться</button>
                 <button type="button" onclick="saveCurrentTz()">Сохранить</button>
             </div>
         </header>
@@ -108,6 +124,15 @@
                 <div class="palette-item" data-kind="register" onclick="addNode('register')">📊 Регистр сведений</div>
                 <div class="palette-item" data-kind="report" onclick="addNode('report')">📈 Отчёт</div>
                 <div class="palette-item" data-kind="note" onclick="addNode('note')">💬 Примечание</div>
+                <h3 style="margin-top:14px;">Публикация</h3>
+                <p style="font-size:11px;color:var(--text-muted);margin:0 0 8px;line-height:1.4;">Доступ только по ссылке. Не открывает задачник и другие ТЗ.</p>
+                <button type="button" class="btn-secondary" style="width:100%;" onclick="openShareModal()">Ссылка для просмотра</button>
+                <div id="share-sidebar-status" class="hidden" style="margin-top:10px;">
+                    <span style="font-size:11px;color:var(--primary);font-weight:600;">Ссылка активна</span>
+                    <button type="button" class="btn-secondary" style="width:100%;margin-top:6px;padding:8px;font-size:11px;" onclick="copyShareLink()">Копировать ссылку</button>
+                </div>
+                <h3 style="margin-top:14px;">Отзывы по ссылке</h3>
+                <div id="guest-comments-wrap" style="max-height:240px;overflow-y:auto;"></div>
             </aside>
             <main class="main">
                 <div class="toolbar">
@@ -158,10 +183,27 @@
         </div>
     </div>
 
+    <div id="share-modal" class="modal-overlay hidden" onclick="if(event.target===this)closeShareModal()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <h2>Публикация по ссылке</h2>
+            <p>Гость откроет отдельную страницу со снимком схемы и текстовой модели. Вход в Смарт Задачник не нужен. У кого нет ссылки — доступа нет.</p>
+            <label class="modal-check">
+                <input type="checkbox" id="share-allow-comments" checked>
+                <span>Разрешить гостям комментарии и текстовые правки в боковой колонке (им не редактируется сама схема в редакторе).</span>
+            </label>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeShareModal()">Отмена</button>
+                <button type="button" onclick="confirmSharePublish()">Опубликовать / обновить снимок</button>
+            </div>
+            <label class="small" style="margin-top:16px;">Ссылка для отправки</label>
+            <input type="text" id="share-link-out" class="share-link-field hidden" readonly>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { collection, addDoc, updateDoc, doc, query, where, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { collection, addDoc, updateDoc, doc, query, where, orderBy, onSnapshot, getDocs, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { initializeFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -189,8 +231,218 @@
         let listUnsub = null;
         let tzBootstrapped = false;
         let schemaTextDebounce = null;
+        let activeShareToken = null;
+        let guestCommentsUnsub = null;
+        let lastShareUrl = '';
 
         if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-theme');
+
+        function shareViewUrl(token) {
+            const u = new URL(location.href);
+            u.pathname = u.pathname.replace(/[^/]*$/, 'tz-view.html');
+            u.search = '?s=' + encodeURIComponent(token);
+            u.hash = '';
+            return u.toString();
+        }
+
+        function updateShareSidebar() {
+            const st = document.getElementById('share-sidebar-status');
+            if (!st) return;
+            if (activeShareToken) {
+                st.classList.remove('hidden');
+                lastShareUrl = shareViewUrl(activeShareToken);
+            } else {
+                st.classList.add('hidden');
+            }
+        }
+
+        window.copyShareLink = function () {
+            const url = lastShareUrl || (activeShareToken ? shareViewUrl(activeShareToken) : '');
+            if (!url) { openShareModal(); return; }
+            navigator.clipboard.writeText(url).then(() => alert('Ссылка скопирована')).catch(() => {
+                prompt('Скопируйте ссылку:', url);
+            });
+        };
+
+        window.openShareModal = async function () {
+            const m = document.getElementById('share-modal');
+            if (!m) return;
+            m.classList.remove('hidden');
+            const out = document.getElementById('share-link-out');
+            if (activeShareToken) {
+                lastShareUrl = shareViewUrl(activeShareToken);
+                out.value = lastShareUrl;
+                out.classList.remove('hidden');
+                try {
+                    const sd = await getDoc(doc(db, 'tzShares', activeShareToken));
+                    if (sd.exists()) {
+                        const ch = document.getElementById('share-allow-comments');
+                        if (ch) ch.checked = sd.data().allowComments !== false;
+                    }
+                } catch (_) { /* ignore */ }
+            } else {
+                out.classList.add('hidden');
+                out.value = '';
+            }
+        };
+
+        window.closeShareModal = function () {
+            const m = document.getElementById('share-modal');
+            if (m) m.classList.add('hidden');
+        };
+
+        function buildShareSnapshot() {
+            syncEdgesFromRequisites();
+            refreshSchemaTextNow();
+            const title = document.getElementById('tz-title').value.trim() || 'Без названия';
+            const status = document.getElementById('tz-status').value;
+            const textModelManual = document.getElementById('tz-text-manual')?.value ?? '';
+            const schemaDump = buildAutoSchemaText();
+            return {
+                title,
+                status,
+                nodes: JSON.parse(JSON.stringify(nodes)),
+                edges: JSON.parse(JSON.stringify(edges)),
+                textModelManual,
+                schemaDump
+            };
+        }
+
+        window.confirmSharePublish = async function () {
+            if (!uid || !currentId) return;
+            const allow = document.getElementById('share-allow-comments').checked;
+            const snapshot = buildShareSnapshot();
+            try {
+                let token = activeShareToken;
+                if (!token) {
+                    token = [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, '0')).join('');
+                    await setDoc(doc(db, 'tzShares', token), {
+                        ownerUserId: uid,
+                        tzSpecId: currentId,
+                        allowComments: allow,
+                        snapshot,
+                        createdAt: new Date().toISOString()
+                    });
+                    await updateDoc(doc(db, 'tzSpecs', currentId), {
+                        shareToken: token,
+                        shareAllowComments: allow,
+                        sharePublishedAt: new Date().toISOString()
+                    });
+                    activeShareToken = token;
+                } else {
+                    await updateDoc(doc(db, 'tzShares', token), {
+                        allowComments: allow,
+                        snapshot,
+                        updatedAt: new Date().toISOString()
+                    });
+                    await updateDoc(doc(db, 'tzSpecs', currentId), {
+                        shareAllowComments: allow,
+                        shareUpdatedAt: new Date().toISOString()
+                    });
+                }
+                lastShareUrl = shareViewUrl(token);
+                const out = document.getElementById('share-link-out');
+                out.value = lastShareUrl;
+                out.classList.remove('hidden');
+                updateShareSidebar();
+                startGuestComments(token);
+                alert('Готово. Ссылка в окне — отправьте её адресату.');
+            } catch (e) {
+                alert('Ошибка публикации. Проверьте правила Firestore (файл tz-share.firestore.rules в репозитории): ' + (e.message || e));
+            }
+        };
+
+        function stopGuestComments() {
+            if (guestCommentsUnsub) {
+                guestCommentsUnsub();
+                guestCommentsUnsub = null;
+            }
+        }
+
+        async function saveOwnerReply(commentId, replyText) {
+            if (!activeShareToken || !uid) return;
+            try {
+                await updateDoc(doc(db, 'tzShares', activeShareToken, 'comments', commentId), {
+                    ownerReply: replyText.trim(),
+                    ownerReplyAt: new Date().toISOString()
+                });
+            } catch (e) {
+                alert('Не удалось сохранить ответ: ' + (e.message || e));
+            }
+        }
+
+        async function setGuestCommentResolved(commentId, resolved) {
+            if (!activeShareToken) return;
+            try {
+                await updateDoc(doc(db, 'tzShares', activeShareToken, 'comments', commentId), { resolved: !!resolved });
+            } catch (e) {
+                alert('Ошибка: ' + (e.message || e));
+            }
+        }
+
+        function startGuestComments(shareToken) {
+            stopGuestComments();
+            const wrap = document.getElementById('guest-comments-wrap');
+            if (!wrap) return;
+            if (!shareToken) {
+                wrap.innerHTML = '<p style="font-size:11px;color:var(--text-muted);margin:0;">Опубликуйте ТЗ, чтобы получать отзывы.</p>';
+                return;
+            }
+            const q = query(collection(db, 'tzShares', shareToken, 'comments'), orderBy('createdAt', 'asc'));
+            guestCommentsUnsub = onSnapshot(q, (snap) => {
+                wrap.innerHTML = '';
+                if (snap.empty) {
+                    wrap.innerHTML = '<p style="font-size:11px;color:var(--text-muted);margin:0;">Пока нет сообщений.</p>';
+                    return;
+                }
+                snap.forEach(d => {
+                    const c = d.data();
+                    const id = d.id;
+                    const box = document.createElement('div');
+                    box.className = 'guest-comment-editor';
+                    const when = c.createdAt ? new Date(c.createdAt).toLocaleString('ru-RU') : '';
+                    const who = (c.authorName && String(c.authorName).trim()) || 'Гость';
+                    const head = document.createElement('div');
+                    head.className = 'gc-head';
+                    head.textContent = who + ' · ' + when + (c.resolved ? ' · учтено' : '');
+                    const body = document.createElement('div');
+                    body.className = 'gc-text';
+                    body.textContent = c.text || '';
+                    const ta = document.createElement('textarea');
+                    ta.placeholder = 'Ваш ответ адресату…';
+                    ta.value = c.ownerReply || '';
+                    const row = document.createElement('div');
+                    row.className = 'gc-row';
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'btn-secondary';
+                    btn.style.padding = '6px 10px';
+                    btn.style.fontSize = '11px';
+                    btn.style.width = 'auto';
+                    btn.textContent = 'Сохранить ответ';
+                    btn.onclick = () => saveOwnerReply(id, ta.value);
+                    const chk = document.createElement('label');
+                    chk.style.display = 'flex';
+                    chk.style.alignItems = 'center';
+                    chk.style.gap = '6px';
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.checked = !!c.resolved;
+                    cb.onchange = () => setGuestCommentResolved(id, cb.checked);
+                    chk.appendChild(cb);
+                    chk.appendChild(document.createTextNode('Пометить учтённым'));
+                    row.appendChild(btn);
+                    row.appendChild(chk);
+                    box.appendChild(head);
+                    box.appendChild(body);
+                    box.appendChild(ta);
+                    box.appendChild(row);
+                    wrap.appendChild(box);
+                });
+            }, () => {
+                wrap.innerHTML = '<p style="font-size:11px;color:var(--danger-text);">Нет доступа к комментариям. Добавьте правила Firestore из tz-share.firestore.rules</p>';
+            });
+        }
 
         function initLogDrawer() {
             const d = document.getElementById('tz-log-drawer');
@@ -340,6 +592,8 @@
             } else {
                 uid = null;
                 currentId = null;
+                activeShareToken = null;
+                stopGuestComments();
                 nodes = [];
                 edges = [];
                 selectedId = null;
@@ -362,6 +616,8 @@
                 updatedAt: new Date().toISOString()
             });
             currentId = ref.id;
+            activeShareToken = null;
+            stopGuestComments();
             nodes = [];
             edges = [];
             selectedId = null;
@@ -373,10 +629,13 @@
             renderEdges();
             clearProps();
             refreshSchemaTextNow();
+            updateShareSidebar();
+            startGuestComments(null);
         };
 
         function loadTz(id, data) {
             currentId = id;
+            activeShareToken = data.shareToken || null;
             document.getElementById('tz-title').value = data.title || '';
             document.getElementById('tz-status').value = data.status || 'draft';
             nodes = Array.isArray(data.nodes) ? JSON.parse(JSON.stringify(data.nodes)) : [];
@@ -390,6 +649,8 @@
             refreshListActive();
             requestAnimationFrame(() => renderEdges());
             scheduleSchemaTextRefresh();
+            updateShareSidebar();
+            startGuestComments(activeShareToken);
         }
 
         window.saveCurrentTz = async () => {

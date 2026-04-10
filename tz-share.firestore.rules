@@ -1,0 +1,35 @@
+// Фрагмент для ДОБАВЛЕНИЯ в существующие правила Firebase (не заменяйте весь файл правил).
+// После вставки задеплойте: firebase deploy --only firestore:rules
+
+    match /tzShares/{shareId} {
+      allow get: if true;
+      allow list: if false;
+
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.ownerUserId
+        && shareId.size() >= 16
+        && request.resource.data.keys().hasAll(['ownerUserId', 'tzSpecId', 'allowComments', 'snapshot', 'createdAt']);
+
+      allow update, delete: if request.auth != null
+        && request.auth.uid == resource.data.ownerUserId;
+
+      match /comments/{commentId} {
+        allow get, list: if true;
+
+        allow create: if get(/databases/$(database)/documents/tzShares/$(shareId)).data.allowComments == true
+          && request.resource.data.keys().hasAll(['text', 'createdAt'])
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() < 8000
+          && (!request.resource.data.keys().hasAny(['authorName'])
+              || request.resource.data.authorName == null
+              || (request.resource.data.authorName is string && request.resource.data.authorName.size() < 120));
+
+        allow update: if request.auth != null
+          && get(/databases/$(database)/documents/tzShares/$(shareId)).data.ownerUserId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ownerReply', 'ownerReplyAt', 'resolved']);
+
+        allow delete: if request.auth != null
+          && get(/databases/$(database)/documents/tzShares/$(shareId)).data.ownerUserId == request.auth.uid;
+      }
+    }

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Просмотр ТЗ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #121212; --bg-card: #1e1e1e; --text-main: #e0e0e0; --text-heading: #fff;
+            --text-muted: #a1a1aa; --border-color: #2a2a2a; --input-bg: #2a2a2a; --input-border: #3f3f46;
+            --primary: #6366f1; --primary-hover: #4f46e5;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
+        .view-top { flex-shrink: 0; padding: 14px 18px; border-bottom: 1px solid var(--border-color); background: var(--bg-card); }
+        .view-top h1 { margin: 0 0 6px; font-size: 18px; color: var(--text-heading); }
+        .view-top .meta { font-size: 12px; color: var(--text-muted); }
+        .view-grid { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 300px; min-height: 0; }
+        @media (max-width: 900px) { .view-grid { grid-template-columns: 1fr; grid-template-rows: minmax(280px, 1fr) auto; } }
+        .view-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; border-right: 1px solid var(--border-color); }
+        @media (max-width: 900px) { .view-main { border-right: none; border-bottom: 1px solid var(--border-color); } }
+        .view-scroll { flex: 1; overflow: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+        .canvas-wrap { position: relative; overflow: auto; min-height: 260px; max-height: min(45vh, 420px); background: repeating-linear-gradient(0deg, transparent, transparent 19px, var(--border-color) 20px), repeating-linear-gradient(90deg, transparent, transparent 19px, var(--border-color) 20px); background-size: 20px 20px; background-color: var(--bg-body); border-radius: 12px; border: 1px solid var(--border-color); }
+        .canvas-inner { position: relative; width: 2000px; height: 1200px; }
+        .tz-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        .tz-node { position: absolute; z-index: 2; min-width: 200px; max-width: 280px; width: max-content; background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 12px; padding: 8px; pointer-events: none; }
+        .tz-node.kind-document { border-left: 4px solid #f59e0b; }
+        .tz-node.kind-catalog { border-left: 4px solid #3b82f6; }
+        .tz-node.kind-register { border-left: 4px solid #8b5cf6; }
+        .tz-node.kind-report { border-left: 4px solid #10b981; }
+        .tz-node.kind-note { border-left: 4px solid #64748b; }
+        .tz-node-title { font-weight: 800; font-size: 12px; color: var(--text-heading); margin-bottom: 4px; }
+        .tz-node-meta { font-size: 10px; color: var(--text-muted); margin-bottom: 6px; }
+        .tz-node-reqs { margin: 0; padding: 6px 0 0; border-top: 1px solid var(--border-color); list-style: none; font-size: 10px; line-height: 1.35; }
+        .tz-node-reqs li { padding: 2px 0; word-break: break-word; }
+        .tz-node-reqs .req-type { color: var(--text-muted); }
+        .block-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin: 0 0 6px; }
+        .dump { margin: 0; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-card); font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Menlo, monospace; max-height: 200px; overflow-y: auto; }
+        .view-side { background: var(--bg-card); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+        .view-side-inner { padding: 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; overflow: hidden; }
+        .view-side h2 { margin: 0; font-size: 15px; color: var(--text-heading); }
+        .view-side .hint { font-size: 12px; color: var(--text-muted); margin: 0; }
+        #comments-list { flex: 1; overflow-y: auto; min-height: 120px; display: flex; flex-direction: column; gap: 10px; }
+        .c-card { border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; font-size: 13px; }
+        .c-card .who { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+        .c-card .body { white-space: pre-wrap; word-break: break-word; }
+        .c-card .reply { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color); font-size: 12px; color: var(--primary); }
+        input, textarea { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-heading); font-size: 13px; font-family: inherit; }
+        textarea { min-height: 100px; resize: vertical; }
+        button { cursor: pointer; padding: 10px 14px; border-radius: 10px; border: none; font-weight: 600; font-size: 13px; background: var(--primary); color: #fff; }
+        button:hover { background: var(--primary-hover); }
+        .err { padding: 40px 20px; text-align: center; color: var(--text-muted); }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div id="page-loading" class="view-top"><p style="margin:0;color:var(--text-muted);">Загрузка…</p></div>
+    <div id="page-err" class="err hidden"></div>
+    <div id="page-ok" class="hidden" style="display:flex; flex-direction:column; flex:1; min-height:0;">
+        <div class="view-top">
+            <h1 id="pub-title">ТЗ</h1>
+            <div class="meta" id="pub-meta"></div>
+        </div>
+        <div class="view-grid">
+            <div class="view-main">
+                <div class="view-scroll">
+                    <div>
+                        <p class="block-label">Схема (снимок на момент публикации)</p>
+                        <div class="canvas-wrap" id="canvas-wrap">
+                            <div class="canvas-inner" id="canvas-inner">
+                                <svg class="tz-svg" id="tz-svg"></svg>
+                                <div id="nodes-layer"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="block-label">Текстовая модель</p>
+                        <pre id="pub-schema" class="dump"></pre>
+                    </div>
+                    <div>
+                        <p class="block-label">Текст автора ТЗ</p>
+                        <pre id="pub-manual" class="dump" style="max-height:160px;"></pre>
+                    </div>
+                </div>
+            </div>
+            <aside class="view-side">
+                <div class="view-side-inner">
+                    <h2>Комментарии и правки</h2>
+                    <p class="hint" id="comments-hint">Здесь можно оставить замечания по тексту и схеме.</p>
+                    <div id="comments-list"></div>
+                    <form id="comment-form" class="hidden">
+                        <input type="text" id="guest-name" placeholder="Ваше имя (необязательно)" maxlength="100">
+                        <textarea id="guest-text" placeholder="Комментарий или предлагаемые правки…" required></textarea>
+                        <button type="submit">Отправить</button>
+                    </form>
+                    <p id="comments-closed" class="hint hidden">Автор закрыл возможность комментировать эту публикацию.</p>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { doc, getDoc, collection, addDoc, query, orderBy, onSnapshot, initializeFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXGtaGi0uqnmEox06KNJKzaV7WD5pdyuY",
+            authDomain: "talkerj.firebaseapp.com",
+            projectId: "talkerj",
+            storageBucket: "talkerj.firebasestorage.app",
+            messagingSenderId: "602611717919",
+            appId: "1:602611717919:web:cbcb845e19f4eaa336022a"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = initializeFirestore(app, { experimentalForceLongPolling: true });
+
+        const KIND_LABELS = { catalog: 'Справочник', document: 'Документ', register: 'Регистр', report: 'Отчёт', note: 'Примечание' };
+        const STATUS_LABELS = { draft: 'Черновик', review: 'Согласование', sent: 'Отправлено', done: 'Выполнено' };
+
+        const params = new URLSearchParams(location.search);
+        const shareId = (params.get('s') || '').trim();
+        if (!shareId || shareId.length < 16) {
+            document.getElementById('page-loading').classList.add('hidden');
+            const e = document.getElementById('page-err');
+            e.classList.remove('hidden');
+            e.textContent = 'Укажите корректную ссылку с параметром ?s=…';
+            throw new Error('no share id');
+        }
+
+        function escapeHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s == null ? '' : String(s);
+            return d.innerHTML;
+        }
+
+        function requisiteLine(n, r, byId) {
+            const name = escapeHtml(r.name || '—');
+            if (r.type === 'ref' && r.refNodeId) {
+                const tgt = byId[r.refNodeId];
+                return '<li>' + name + ' <span class="req-type">→ ' + escapeHtml(tgt ? (tgt.name || tgt.id) : r.refNodeId) + '</span></li>';
+            }
+            return '<li>' + name + ' <span class="req-type">(' + escapeHtml(r.type || '') + ')</span></li>';
+        }
+
+        function renderNodes(nodes) {
+            const layer = document.getElementById('nodes-layer');
+            layer.innerHTML = '';
+            const byId = Object.fromEntries(nodes.map(n => [n.id, n]));
+            nodes.forEach(n => {
+                const div = document.createElement('div');
+                div.className = 'tz-node kind-' + (n.kind || 'note');
+                div.dataset.id = n.id;
+                div.style.left = (n.x || 0) + 'px';
+                div.style.top = (n.y || 0) + 'px';
+                const reqs = n.requisites || [];
+                let reqBlock = '';
+                if (reqs.length) {
+                    reqBlock = '<ul class="tz-node-reqs">' + reqs.map(r => requisiteLine(n, r, byId)).join('') + '</ul>';
+                }
+                div.innerHTML = '<div class="tz-node-title">' + escapeHtml(n.name) + '</div><div class="tz-node-meta">' + escapeHtml(KIND_LABELS[n.kind] || n.kind) + '</div>' + reqBlock;
+                layer.appendChild(div);
+            });
+        }
+
+        function nodeBottom(n) {
+            const found = document.querySelector('#nodes-layer .tz-node[data-id="' + n.id + '"]');
+            const w = found && found.offsetWidth ? found.offsetWidth : 200;
+            const hh = found && found.offsetHeight ? found.offsetHeight : 72;
+            return { x: (n.x || 0) + w / 2, y: (n.y || 0) + hh };
+        }
+
+        function nodeTop(n) {
+            const found = document.querySelector('#nodes-layer .tz-node[data-id="' + n.id + '"]');
+            const w = found && found.offsetWidth ? found.offsetWidth : 200;
+            return { x: (n.x || 0) + w / 2, y: (n.y || 0) };
+        }
+
+        function renderEdges(edges, nodes) {
+            const svg = document.getElementById('tz-svg');
+            svg.setAttribute('viewBox', '0 0 2000 1200');
+            const byId = Object.fromEntries(nodes.map(n => [n.id, n]));
+            let html = '';
+            (edges || []).forEach(e => {
+                const a = byId[e.from];
+                const b = byId[e.to];
+                if (!a || !b) return;
+                const p1 = nodeBottom(a);
+                const p2 = nodeTop(b);
+                const mx = (p1.x + p2.x) / 2;
+                html += '<path d="M ' + p1.x + ' ' + p1.y + ' C ' + mx + ' ' + p1.y + ', ' + mx + ' ' + p2.y + ', ' + p2.x + ' ' + p2.y + '" fill="none" stroke="rgba(99,102,241,0.7)" stroke-width="2"/>';
+                const lab = (e.label || '').replace(/</g, '');
+                html += '<text x="' + mx + '" y="' + ((p1.y + p2.y) / 2) + '" fill="#a1a1aa" font-size="10" text-anchor="middle">' + escapeHtml(lab) + '</text>';
+            });
+            svg.innerHTML = html;
+        }
+
+        const snapRef = doc(db, 'tzShares', shareId);
+        const snapDoc = await getDoc(snapRef);
+        document.getElementById('page-loading').classList.add('hidden');
+
+        if (!snapDoc.exists()) {
+            document.getElementById('page-err').classList.remove('hidden');
+            document.getElementById('page-err').textContent = 'Публикация не найдена или ссылка устарела.';
+        } else {
+            const pub = snapDoc.data();
+            const snap = pub.snapshot || {};
+            const nodes = Array.isArray(snap.nodes) ? snap.nodes : [];
+            const edges = Array.isArray(snap.edges) ? snap.edges : [];
+
+            document.getElementById('page-ok').classList.remove('hidden');
+            document.getElementById('page-ok').style.display = 'flex';
+
+            document.getElementById('pub-title').textContent = snap.title || 'Техническое задание';
+            document.getElementById('pub-meta').textContent = 'Статус на момент публикации: ' + (STATUS_LABELS[snap.status] || snap.status || '—')
+                + ' · опубликовано ' + (pub.createdAt ? new Date(pub.createdAt).toLocaleString('ru-RU') : '');
+
+            document.getElementById('pub-schema').textContent = snap.schemaDump || '(нет текста)';
+            document.getElementById('pub-manual').textContent = snap.textModelManual || '(пусто)';
+
+            renderNodes(nodes);
+            requestAnimationFrame(() => renderEdges(edges, nodes));
+
+            const allow = pub.allowComments === true;
+            if (allow) {
+                document.getElementById('comment-form').classList.remove('hidden');
+            } else {
+                document.getElementById('comments-closed').classList.remove('hidden');
+                document.getElementById('comments-hint').classList.add('hidden');
+            }
+
+            const listEl = document.getElementById('comments-list');
+            const q = query(collection(db, 'tzShares', shareId, 'comments'), orderBy('createdAt', 'asc'));
+            onSnapshot(q, (qs) => {
+                listEl.innerHTML = '';
+                if (qs.empty) {
+                    listEl.innerHTML = '<p class="hint" style="margin:0;">Пока нет сообщений.</p>';
+                    return;
+                }
+                qs.forEach(d => {
+                    const c = d.data();
+                    const card = document.createElement('div');
+                    card.className = 'c-card';
+                    const when = c.createdAt ? new Date(c.createdAt).toLocaleString('ru-RU') : '';
+                    const who = (c.authorName && String(c.authorName).trim()) || 'Гость';
+                    card.innerHTML = '<div class="who">' + escapeHtml(who) + ' · ' + escapeHtml(when) + '</div>'
+                        + '<div class="body">' + escapeHtml(c.text || '') + '</div>'
+                        + (c.ownerReply ? '<div class="reply"><strong>Ответ автора ТЗ:</strong><br>' + escapeHtml(c.ownerReply) + '</div>' : '');
+                    listEl.appendChild(card);
+                });
+            });
+
+            document.getElementById('comment-form').addEventListener('submit', async (ev) => {
+                ev.preventDefault();
+                const text = document.getElementById('guest-text').value.trim();
+                if (!text) return;
+                const authorName = document.getElementById('guest-name').value.trim();
+                try {
+                    const payload = { text, createdAt: new Date().toISOString() };
+                    if (authorName) payload.authorName = authorName;
+                    await addDoc(collection(db, 'tzShares', shareId, 'comments'), payload);
+                    document.getElementById('guest-text').value = '';
+                } catch (err) {
+                    alert('Не удалось отправить: ' + (err.message || err));
+                }
+            });
+        }
+    </script>
+</body>
+</html>
