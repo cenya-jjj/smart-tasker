@@ -73,7 +73,31 @@
         .task-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; cursor: pointer; transition: 0.2s; }
         .task-card.expanded .task-details { display: block; }
         .task-details { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); }
-        .priority-high { box-shadow: 0 0 15px rgba(99, 102, 241, 0.3); border-color: var(--primary) !important; }
+        .priority-high {
+            position: relative;
+            border-color: #ff7a18 !important;
+            box-shadow: 0 0 0 1px rgba(255, 122, 24, 0.45), 0 0 18px rgba(255, 122, 24, 0.35), 0 0 30px rgba(255, 50, 50, 0.22);
+            animation: urgentPulse 1.6s ease-in-out infinite alternate;
+        }
+        .priority-high::after {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            border-radius: 12px;
+            pointer-events: none;
+            background: linear-gradient(125deg, rgba(255, 120, 20, 0.2), rgba(255, 50, 50, 0.18), rgba(255, 200, 40, 0.12));
+            mix-blend-mode: screen;
+            animation: urgentFlame 2.2s linear infinite;
+        }
+        @keyframes urgentPulse {
+            from { box-shadow: 0 0 0 1px rgba(255, 122, 24, 0.35), 0 0 12px rgba(255, 122, 24, 0.2), 0 0 24px rgba(255, 50, 50, 0.12); }
+            to { box-shadow: 0 0 0 1px rgba(255, 122, 24, 0.55), 0 0 24px rgba(255, 122, 24, 0.42), 0 0 40px rgba(255, 50, 50, 0.28); }
+        }
+        @keyframes urgentFlame {
+            0% { filter: hue-rotate(0deg) saturate(1); opacity: 0.72; }
+            50% { filter: hue-rotate(8deg) saturate(1.2); opacity: 0.9; }
+            100% { filter: hue-rotate(-6deg) saturate(0.95); opacity: 0.7; }
+        }
         .status-plan { border-left: 3px solid var(--st-plan); }
         .status-todo { border-left: 3px solid var(--st-todo); }
         .status-wait { border-left: 3px solid var(--st-wait); }
@@ -305,19 +329,19 @@
             <div style="display:flex; gap:10px;">
                 <input type="text" id="modal-task-emoji" placeholder="Эмодзи (напр. 🚀)" maxlength="2">
                 <select id="modal-task-emoji-preset" onchange="applyEmojiPreset(this.value)">
-                    <option value="">Эмодзи пресет</option>
-                    <option value="🔥">🔥 Срочно</option>
-                    <option value="🚀">🚀 Рост</option>
-                    <option value="✅">✅ Готово</option>
-                    <option value="🛠️">🛠️ Разработка</option>
-                    <option value="📞">📞 Звонок</option>
-                    <option value="📊">📊 Отчет</option>
-                    <option value="💡">💡 Идея</option>
-                    <option value="⏳">⏳ Ожидание</option>
-                    <option value="👥">👥 Команда</option>
-                    <option value="🧪">🧪 Тест</option>
-                    <option value="💸">💸 Финансы</option>
-                    <option value="🎯">🎯 Цель</option>
+                    <option value="">Животные эмодзи</option>
+                    <option value="🦫">🦫 Капибара</option>
+                    <option value="🦎">🦎 Геккон</option>
+                    <option value="🦊">🦊 Лиса</option>
+                    <option value="🐼">🐼 Панда</option>
+                    <option value="🐯">🐯 Тигр</option>
+                    <option value="🐨">🐨 Коала</option>
+                    <option value="🐧">🐧 Пингвин</option>
+                    <option value="🦉">🦉 Сова</option>
+                    <option value="🐳">🐳 Кит</option>
+                    <option value="🐙">🐙 Осьминог</option>
+                    <option value="🦄">🦄 Единорог</option>
+                    <option value="🐺">🐺 Волк</option>
                 </select>
                 <input type="text" id="modal-task-tag" placeholder="Тег">
                 <select id="modal-task-priority"><option value="low">Низкая</option><option value="medium">Средняя</option><option value="high">Высокая 🔥</option></select>
@@ -726,10 +750,11 @@
 
             groupMeta.forEach(g => groups[g.key].forEach(t => {
                 const prior = t.priority === 'high' ? 'priority-high' : '';
-                const emoji = t.emoji ? `${t.emoji} ` : '';
+                const emoji = t.emoji ? `${t.emoji}` : '';
                 const doneMeta = t.completedAt ? `<div style="font-size:10px; color:var(--st-done); margin-top:4px;">Завершено: ${t.completedAt.split('T')[0]}</div>` : '';
                 document.getElementById(`group-${g.key}`).innerHTML += `<div class="task-card status-${t.status} ${prior}" draggable="true" ondragstart="startDragTask(event,'${t.id}')" onclick="this.classList.toggle('expanded')">
-                    <div style="display:flex; justify-content:space-between;"><b>${emoji}${t.title}</b><span class="status-chip ${t.status}">${(t.status || 'plan').toUpperCase()}</span></div>
+                    <div style="display:flex; justify-content:space-between;"><b>${t.title}</b><span class="status-chip ${t.status}">${(t.status || 'plan').toUpperCase()}</span></div>
+                    <div style="font-size:18px; line-height:1; margin-top:6px; min-height:18px;">${emoji}</div>
                     <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">#${t.tag} | 📅 ${t.dueDate || '-'}</div>
                     ${doneMeta}
                     <div class="task-details" onclick="event.stopPropagation()">
