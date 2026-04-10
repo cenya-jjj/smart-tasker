@@ -77,45 +77,13 @@
         .task-card.expanded .task-details { display: block; }
         .task-details { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); }
         .priority-high {
-            position: relative;
             border-color: #ff7a18 !important;
-            box-shadow: 0 0 0 1px rgba(255, 122, 24, 0.45), 0 0 18px rgba(255, 122, 24, 0.35), 0 0 30px rgba(255, 50, 50, 0.22);
-            animation: urgentPulse 1.6s ease-in-out infinite alternate;
-        }
-        .priority-high::after {
-            content: "";
-            position: absolute;
-            inset: -1px;
-            border-radius: 12px;
-            pointer-events: none;
-            background: linear-gradient(125deg, rgba(255, 120, 20, 0.2), rgba(255, 50, 50, 0.18), rgba(255, 200, 40, 0.12));
-            mix-blend-mode: screen;
-            animation: urgentFlame 2.2s linear infinite;
-        }
-        .priority-high::before {
-            content: "";
-            position: absolute;
-            inset: -2px;
-            border-radius: 13px;
-            pointer-events: none;
-            border: 2px solid transparent;
-            border-top-color: rgba(255, 180, 80, 0.9);
-            border-right-color: rgba(255, 120, 20, 0.85);
-            border-bottom-color: rgba(255, 50, 50, 0.45);
-            animation: flameContour 1.2s linear infinite;
+            box-shadow: 0 0 0 1px rgba(255, 122, 24, 0.5), 0 0 14px rgba(255, 122, 24, 0.3), 0 0 22px rgba(255, 122, 24, 0.22);
+            animation: urgentPulse 1.5s ease-in-out infinite alternate;
         }
         @keyframes urgentPulse {
             from { box-shadow: 0 0 0 1px rgba(255, 122, 24, 0.35), 0 0 12px rgba(255, 122, 24, 0.2), 0 0 24px rgba(255, 50, 50, 0.12); }
             to { box-shadow: 0 0 0 1px rgba(255, 122, 24, 0.55), 0 0 24px rgba(255, 122, 24, 0.42), 0 0 40px rgba(255, 50, 50, 0.28); }
-        }
-        @keyframes urgentFlame {
-            0% { filter: hue-rotate(0deg) saturate(1); opacity: 0.72; }
-            50% { filter: hue-rotate(8deg) saturate(1.2); opacity: 0.9; }
-            100% { filter: hue-rotate(-6deg) saturate(0.95); opacity: 0.7; }
-        }
-        @keyframes flameContour {
-            from { transform: rotate(0deg) scale(1); opacity: 0.7; }
-            to { transform: rotate(360deg) scale(1.01); opacity: 1; }
         }
         .status-plan { border-left: 3px solid var(--st-plan); }
         .status-todo { border-left: 3px solid var(--st-todo); }
@@ -143,8 +111,8 @@
             inset: 0;
             pointer-events: none;
             border-radius: 12px;
-            background: linear-gradient(135deg, rgba(173, 216, 255, 0.15), rgba(200, 235, 255, 0.05));
-            box-shadow: inset 0 0 0 1px rgba(173, 216, 255, 0.3);
+            background: linear-gradient(135deg, rgba(173, 216, 255, 0.2), rgba(200, 235, 255, 0.08));
+            box-shadow: inset 0 0 0 1px rgba(173, 216, 255, 0.38), inset 0 0 16px rgba(173, 216, 255, 0.22);
         }
         @keyframes spinGear { from { transform: rotate(0); } to { transform: rotate(360deg); } }
         @keyframes hammerHit {
@@ -359,7 +327,7 @@
                 <div class="help-card">
                     <div class="help-icon">🦫</div>
                     <h4 style="margin: 0 0 10px 0; font-size: 15px;">Животные эмодзи и эффекты</h4>
-                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">В задачах доступны эмодзи животных (включая капибару и геккона). To Do анимируется шестеренкой, Wait покрывается легким льдом, а срочные задачи получают огненный контур.</p>
+                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">В задачах доступны эмодзи животных (включая капибару и геккона). To Do анимируется шестеренкой, Wait получает замороженный стиль, а срочные задачи выделяются неоновым оранжевым контуром.</p>
                 </div>
             </div>
         </div>
@@ -429,7 +397,16 @@
             <h3>Профиль</h3>
             <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">Измените ваше имя (Тег не изменится)</p>
             <input type="text" id="edit-username" placeholder="Имя">
-            <button id="flash-drive-btn" class="btn-secondary hidden" onclick="throwFlashDrive()" style="margin-top:4px;">Кинет флешку ⚡</button>
+            <div id="flash-controls" class="hidden" style="display:flex; flex-direction:column; gap:8px; margin-top:4px;">
+                <label style="font-size:12px; color:var(--text-muted);">Флешка для участника (только лидер)</label>
+                <select id="flash-team-select" onchange="onFlashTeamChange()">
+                    <option value="">Выберите команду</option>
+                </select>
+                <select id="flash-target-select">
+                    <option value="">Выберите участника</option>
+                </select>
+                <button id="flash-drive-btn" class="btn-secondary" onclick="sendFlashToUser()">Кинуть флешку участнику ⚡</button>
+            </div>
             <div style="display: flex; gap: 10px;">
                 <button onclick="saveProfile()">Сохранить</button>
                 <button class="btn-secondary" onclick="closeModals()">Закрыть</button>
@@ -440,7 +417,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendEmailVerification, updateProfile, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { collection, addDoc, updateDoc, query, where, onSnapshot, deleteDoc, doc, initializeFirestore, setDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { collection, addDoc, updateDoc, query, where, onSnapshot, deleteDoc, doc, initializeFirestore, setDoc, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDXGtaGi0uqnmEox06KNJKzaV7WD5pdyuY",
@@ -455,7 +432,8 @@
         const auth = getAuth(app);
         const db = initializeFirestore(app, { experimentalForceLongPolling: true });
 
-        let allItems = []; let myTeams = []; let currentDate = new Date(); let currentSpace = 'personal'; let unsubTasks = [];
+        let allItems = []; let myTeams = []; let currentDate = new Date(); let currentSpace = 'personal'; let unsubTasks = []; let unsubUserDoc = null;
+        let flashMembersByTeam = {};
         const tagPattern = /^[A-Z0-9]{6}$/;
 
         const splitNick = (displayName) => {
@@ -505,6 +483,18 @@
             fx.classList.add('show');
             setTimeout(() => fx.classList.remove('show'), 180);
             showToast("Флешка", "Системная вспышка отправлена");
+        };
+        const setupUserFlashListener = (uid) => {
+            if(unsubUserDoc) unsubUserDoc();
+            unsubUserDoc = onSnapshot(doc(db, "users", uid), snap => {
+                const data = snap.data() || {};
+                const lastTs = Number(localStorage.getItem('lastFlashTs') || 0);
+                const incomingTs = Number(data.flashSignalAt || 0);
+                if(incomingTs > lastTs) {
+                    localStorage.setItem('lastFlashTs', String(incomingTs));
+                    throwFlashDrive();
+                }
+            });
         };
 
         window.showConfirm = (t, txt, onY) => {
@@ -596,12 +586,30 @@
                 document.getElementById('auth-wrapper').classList.add('hidden');
                 document.getElementById('dashboard-wrapper').classList.remove('hidden');
                 renderUserIdentity(ensuredNick);
+                setupUserFlashListener(user.uid);
                 fetchTeams(user.uid);
             } else {
                 document.getElementById('auth-wrapper').classList.remove('hidden');
                 document.getElementById('dashboard-wrapper').classList.add('hidden');
+                if(unsubUserDoc) { unsubUserDoc(); unsubUserDoc = null; }
             }
         });
+
+        async function loadFlashTargets(teamId) {
+            const sel = document.getElementById('flash-target-select');
+            sel.innerHTML = `<option value="">Выберите участника</option>`;
+            const team = myTeams.find(t => t.id === teamId);
+            if(!team) return;
+            const ids = (team.members || []).filter(id => id !== auth.currentUser.uid);
+            flashMembersByTeam[teamId] = [];
+            for (const memberId of ids) {
+                const uSnap = await getDoc(doc(db, "users", memberId));
+                if(!uSnap.exists()) continue;
+                const info = { uid: memberId, displayName: uSnap.data().displayName || "Пользователь" };
+                flashMembersByTeam[teamId].push(info);
+                sel.innerHTML += `<option value="${memberId}">${info.displayName}</option>`;
+            }
+        }
 
         function fetchTeams(uid) {
             onSnapshot(query(collection(db,"teams"), where("members","array-contains",uid)), snap => {
@@ -750,9 +758,35 @@
         window.openProfileModal = () => {
             const parsed = splitNick(auth.currentUser?.displayName || '');
             document.getElementById('edit-username').value = parsed.name || '';
-            const allowFlash = (auth.currentUser?.displayName || '').trim() === 'User#TJVVEY';
-            document.getElementById('flash-drive-btn').classList.toggle('hidden', !allowFlash);
+            const leaderTeams = myTeams.filter(t => t.owner === auth.currentUser.uid);
+            const flashWrap = document.getElementById('flash-controls');
+            const teamSel = document.getElementById('flash-team-select');
+            const targetSel = document.getElementById('flash-target-select');
+            if(leaderTeams.length) {
+                flashWrap.classList.remove('hidden');
+                teamSel.innerHTML = `<option value="">Выберите команду</option>`;
+                leaderTeams.forEach(t => { teamSel.innerHTML += `<option value="${t.id}">${t.name}</option>`; });
+                targetSel.innerHTML = `<option value="">Выберите участника</option>`;
+            } else {
+                flashWrap.classList.add('hidden');
+            }
             document.getElementById('profile-modal').classList.remove('hidden');
+        };
+        window.onFlashTeamChange = async () => {
+            const teamId = document.getElementById('flash-team-select').value;
+            if(!teamId) return;
+            await loadFlashTargets(teamId);
+        };
+        window.sendFlashToUser = async () => {
+            const teamId = document.getElementById('flash-team-select').value;
+            const targetUid = document.getElementById('flash-target-select').value;
+            if(!teamId || !targetUid) return showToast("Флешка", "Выберите команду и участника");
+            const team = myTeams.find(t => t.id === teamId);
+            if(!team || team.owner !== auth.currentUser.uid) return showToast("Флешка", "Только лидер может отправлять");
+            if(targetUid === auth.currentUser.uid) return showToast("Флешка", "Себе отправлять нельзя");
+            await setDoc(doc(db, "users", targetUid), { flashSignalAt: Date.now(), flashBy: auth.currentUser.uid }, { merge: true });
+            const target = (flashMembersByTeam[teamId] || []).find(m => m.uid === targetUid);
+            showToast("Флешка", `Отправлено: ${target?.displayName || "участник"}`);
         };
         window.applyEmojiPreset = (value) => {
             if(!value) return;
