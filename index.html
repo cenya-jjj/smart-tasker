@@ -65,9 +65,14 @@
 
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-        .cal-day { background: var(--day-bg); border-radius: 8px; border: 1px solid var(--border-color); padding: 6px; min-height: 70px; color: var(--text-muted); font-size: 11px; display: flex; flex-direction: column; gap: 3px; cursor: pointer; }
+        .cal-day { background: var(--day-bg); border-radius: 8px; border: 1px solid var(--border-color); padding: 6px; min-height: 70px; color: var(--text-muted); font-size: 11px; display: flex; flex-direction: column; gap: 3px; cursor: pointer; align-items: stretch; }
         .cal-day.today { border-color: var(--danger-text); color: var(--danger-text); font-weight: bold; }
-        .cal-day-task { background: rgba(99, 102, 241, 0.12); color: var(--text-heading); font-size: 9px; padding: 2px 4px; border-radius: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-left: 2px solid var(--primary); }
+        .cal-day-num { align-self: flex-end; line-height: 1.2; }
+        .cal-day-tasks { max-height: 92px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; min-height: 0; }
+        .cal-day-tasks::-webkit-scrollbar { width: 4px; }
+        .cal-day-tasks::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        .cal-day-task { background: rgba(99, 102, 241, 0.12); color: var(--text-heading); font-size: 9px; padding: 2px 4px; border-radius: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-left: 2px solid var(--primary); cursor: default; }
+        .cal-day .btn-icon { margin-top: auto; align-self: flex-start; }
 
         .note-item { background: var(--bg-card); padding: 10px; margin-bottom: 10px; border-radius: 10px; font-size: 13px; display: flex; justify-content: space-between; border: 1px solid var(--border-color); }
         .btn-icon { background: none; border: none; padding: 3px; color: var(--text-muted); cursor: pointer; font-size: 14px; width: auto; margin: 0; }
@@ -94,6 +99,7 @@
         .task-group-title { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 8px; }
         .task-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; min-height: 24px; }
         .task-card { cursor: grab; }
+        .task-card-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; text-align: left; }
         .task-card:active { cursor: grabbing; }
         .task-group.drag-over { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
         .status-visual { margin-top: 6px; min-height: 18px; display: flex; align-items: center; gap: 8px; }
@@ -103,7 +109,10 @@
         .task-card.status-wait .status-visual { color: #bce9ff; }
         .tasks-shell { margin-top: 22px; background: transparent; border: none; padding: 0; }
         .tasks-row { display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(360px, 1fr); gap: 14px; align-items: stretch; }
-        .tasks-board { background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 12px; }
+        .tasks-board { background: transparent; border: none; border-radius: 0; padding: 8px 0 12px 0; box-shadow: none; border-top: 1px solid var(--border-color); margin-top: 4px; }
+        .board-filters-panel { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+        .board-filters-panel.hidden { display: none !important; }
+        .board-filters-panel input, .board-filters-panel select { margin-bottom: 0 !important; }
         .task-side-panel { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 14px; min-width: 360px; height: 100%; box-sizing: border-box; }
         .task-side-empty { color: var(--text-muted); font-size: 13px; }
         .task-side-panel.side-status-plan { border-color: var(--st-plan); }
@@ -129,11 +138,11 @@
         @media (max-width: 760px) {
             body { padding: 10px; }
             .dashboard-container { padding: 12px; }
-            .tasks-board > div:first-child { flex-wrap: wrap; gap: 8px !important; align-items: flex-start !important; }
-            .tasks-board > div:first-child > div { flex-wrap: wrap; gap: 6px !important; }
-            .tasks-board > div:first-child input,
-            .tasks-board > div:first-child select,
-            .tasks-board > div:first-child button { width: auto; min-width: 120px; }
+            .board-filters-panel { flex-direction: column; align-items: stretch !important; }
+            .board-filters-panel input,
+            .board-filters-panel select,
+            .board-filters-panel button,
+            .board-filters-panel label { width: 100% !important; max-width: none; }
             .task-list { grid-template-columns: 1fr; }
             #task-modal .modal-content { max-width: 94vw; padding: 16px; }
         }
@@ -251,30 +260,31 @@
             <div class="tasks-shell">
             <div class="tasks-row">
             <div class="tasks-board">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap: 10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
                     <h3 style="margin:0;">Доска задач</h3>
-                    <div style="display:flex; gap:8px; align-items:center;">
-                        <input type="date" id="filter-date" onchange="renderTasks()" style="margin:0; padding:6px; width:auto; font-size:12px;">
-                        <select id="filter-status" onchange="renderTasks()" style="margin:0; padding:6px; width:auto; font-size:12px;">
+                    <button type="button" class="btn-secondary board-filters-toggle" style="width:auto; padding:6px 12px; margin:0; font-size:12px;" onclick="toggleBoardFilters()">Фильтры ▼</button>
+                </div>
+                <div id="board-filters-panel" class="board-filters-panel hidden">
+                        <input type="date" id="filter-date" onchange="renderTasks()" style="padding:6px; width:auto; font-size:12px;">
+                        <select id="filter-status" onchange="renderTasks()" style="padding:6px; width:auto; font-size:12px;">
                             <option value="all">Все статусы</option>
                             <option value="plan">Plan</option><option value="todo">To Do</option>
                             <option value="wait">Wait</option><option value="done">Done</option>
                         </select>
-                        <select id="sort-by" onchange="renderTasks()" style="margin:0; padding:6px; width:auto; font-size:12px;">
+                        <select id="sort-by" onchange="renderTasks()" style="padding:6px; width:auto; font-size:12px;">
                             <option value="dueAsc">Сначала ранний дедлайн</option>
                             <option value="dueDesc">Сначала поздний дедлайн</option>
                             <option value="priorityDesc">Высокий приоритет</option>
                             <option value="newest">Сначала новые</option>
                         </select>
-                        <select id="tasks-view-mode" onchange="renderTasks()" style="margin:0; padding:6px; width:auto; font-size:12px;">
+                        <select id="tasks-view-mode" onchange="renderTasks()" style="padding:6px; width:auto; font-size:12px;">
                             <option value="board">Доска</option>
                             <option value="table">Таблица</option>
                         </select>
-                        <button class="btn-secondary" style="width:auto; padding:6px 12px; margin:0;" onclick="document.getElementById('filter-date').value=''; renderTasks();">Сброс</button>
-                        <label style="display:flex; align-items:center; gap:5px; font-size:12px; cursor:pointer;">
+                        <button type="button" class="btn-secondary" style="width:auto; padding:6px 12px; margin:0;" onclick="document.getElementById('filter-date').value=''; renderTasks();">Сброс</button>
+                        <label style="display:flex; align-items:center; gap:5px; font-size:12px; cursor:pointer; white-space:nowrap;">
                             <input type="checkbox" id="setting-show-done" onchange="renderTasks()" style="width:auto; margin:0;"> Show Done
                         </label>
-                    </div>
                 </div>
                 <div id="tasks-grid" class="tasks-grid"></div>
             </div>
@@ -492,6 +502,9 @@
         let allItems = []; let myTeams = []; let currentDate = new Date(); let currentSpace = 'personal'; let unsubTasks = []; let unsubUserDoc = null; let selectedTaskId = null;
         let flashMembersByTeam = {};
         const tagPattern = /^[A-Z0-9]{6}$/;
+        const escapeHtml = (s) => { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; };
+        const truncateText = (s, max) => { const str = String(s || ''); return str.length <= max ? str : str.slice(0, Math.max(0, max - 1)) + '…'; };
+        const attrEscape = (s) => String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
         const splitNick = (displayName) => {
             const raw = (displayName || '').trim();
@@ -622,6 +635,23 @@
             }
         };
         window.handleLogout = () => signOut(auth);
+        window.toggleBoardFilters = () => {
+            const p = document.getElementById('board-filters-panel');
+            const btn = document.querySelector('.board-filters-toggle');
+            if(!p) return;
+            p.classList.toggle('hidden');
+            const open = !p.classList.contains('hidden');
+            if(btn) btn.textContent = open ? 'Фильтры ▲' : 'Фильтры ▼';
+            localStorage.setItem('boardFiltersOpen', open ? '1' : '0');
+        };
+        (function initBoardFiltersState() {
+            const p = document.getElementById('board-filters-panel');
+            const btn = document.querySelector('.board-filters-toggle');
+            if(localStorage.getItem('boardFiltersOpen') === '1' && p) {
+                p.classList.remove('hidden');
+                if(btn) btn.textContent = 'Фильтры ▲';
+            }
+        })();
         window.leakDataPrank = () => showConfirm("Слив данных", "Все ваши задачи уйдут в базу 1С. Продолжить?", async () => { handleLogout(); setTimeout(()=>alert("Не ну ты серьезно? Это ж шутка!"), 500); });
 
         window.switchView = (id) => {
@@ -634,15 +664,15 @@
 
         window.setSpace = (id) => {
             currentSpace = id;
-            document.querySelectorAll('.space-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.space-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.space === id);
+            });
             const heading = document.getElementById('notes-heading');
             if(id === 'personal') {
                 heading.innerText = "Мои заметки";
-                document.querySelector('.space-tab[onclick*="personal"]').classList.add('active');
             } else {
                 const team = myTeams.find(t => t.id === id);
                 heading.innerText = team ? `Заметки — ${team.name}` : "Заметки";
-                document.querySelectorAll('.space-tab').forEach(t => { if(t.innerText === team?.name) t.classList.add('active'); });
             }
             renderNotes(); renderTasks(); renderCalendar();
         };
@@ -687,31 +717,60 @@
         function fetchTeams(uid) {
             onSnapshot(query(collection(db,"teams"), where("members","array-contains",uid)), snap => {
                 myTeams = []; const tabs = document.getElementById('spaces-tabs');
-                tabs.innerHTML = `<div class="space-tab ${currentSpace==='personal'?'active':''}" onclick="setSpace('personal')">Личные</div>`;
+                tabs.innerHTML = `<div class="space-tab ${currentSpace==='personal'?'active':''}" data-space="personal" onclick="setSpace('personal')">Личные</div>`;
                 const statSel = document.getElementById('stat-space-select');
                 statSel.innerHTML = `<option value="all">Все</option><option value="personal">Личные</option>`;
                 const teamsList = document.getElementById('teams-list-container'); teamsList.innerHTML = '';
                 
                 snap.forEach(d => {
                     const t = {id:d.id, ...d.data()}; myTeams.push(t);
-                    tabs.innerHTML += `<div class="space-tab ${currentSpace===t.id?'active':''}" onclick="setSpace('${t.id}')">${t.name}</div>`;
+                    tabs.innerHTML += `<div class="space-tab ${currentSpace===t.id?'active':''}" data-space="${t.id}" onclick="setSpace('${t.id}')">${escapeHtml(t.name)}</div>`;
                     statSel.innerHTML += `<option value="${t.id}">${t.name}</option>`;
                     const isOwner = t.owner === uid;
                     teamsList.innerHTML += `<div class="card" style="padding:15px; margin-bottom:10px; background:var(--bg-body); border:1px solid var(--border-color);">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <b>${t.name}</b>
-                                <div style="font-size:11px; color:var(--text-muted);">Пользователей: ${(t.members || []).length}</div>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+                            <div style="min-width:0; flex:1;">
+                                <b>${escapeHtml(t.name)}</b>
+                                <div style="font-size:11px; color:var(--text-muted);">Участников: ${(t.members || []).length}</div>
+                                <div style="font-size:10px; color:var(--text-muted); margin-top:8px; line-height:1.5;" title="Типовые объекты конфигурации 1С (ориентир для ТЗ и обсуждений)">
+                                    <span title="Справочник">📁</span>
+                                    <span title="Документ">📄</span>
+                                    <span title="Регистр сведений">📊</span>
+                                    <span title="Отчёт">📈</span>
+                                    <span title="Обработка / регистр накопления">⚙️</span>
+                                    <span style="margin-left:6px;">метаданные 1С</span>
+                                </div>
                             </div>
-                            <div style="display:flex; gap:8px;">
+                            <div style="display:flex; gap:8px; flex-shrink:0;">
                                 <button class="btn-secondary" style="width:auto; padding:5px 10px;" onclick="inviteUser('${t.id}')">Пригласить</button>
                                 ${isOwner ? `<button class="btn-danger" style="margin:0;" onclick="deleteTeam('${t.id}')">Удалить</button>` : ''}
                             </div>
                         </div>
+                        <details style="margin-top:12px;">
+                            <summary style="cursor:pointer; font-size:12px; color:var(--primary); font-weight:600;">Список участников</summary>
+                            <ul id="team-members-${t.id}" style="margin:8px 0 0; padding-left:18px; font-size:12px; color:var(--text-main);"></ul>
+                        </details>
                     </div>`;
                 });
+                snap.forEach(d => { hydrateTeamMemberList(d.id, d.data().members || []); });
                 startListeners(uid);
             });
+        }
+
+        async function hydrateTeamMemberList(teamId, memberIds) {
+            const ul = document.getElementById('team-members-' + teamId);
+            if(!ul) return;
+            ul.innerHTML = '';
+            for(const mid of memberIds) {
+                let label = mid;
+                try {
+                    const uSnap = await getDoc(doc(db, 'users', mid));
+                    if(uSnap.exists()) label = uSnap.data().displayName || mid;
+                } catch(_) {}
+                const li = document.createElement('li');
+                li.textContent = label;
+                ul.appendChild(li);
+            }
         }
 
         function startListeners(uid) {
@@ -937,9 +996,9 @@
             if(viewMode === 'table') {
                 const noDeadline = filtered.filter(t => !t.dueDate);
                 let tbl = `<table class="stats-table"><tr><th>Задача</th><th>Статус</th><th>Дедлайн</th><th>Приоритет</th></tr>`;
-                filtered.forEach(t => tbl += `<tr onclick="selectTask('${t.id}')" style="cursor:pointer;"><td>${t.title}</td><td>${t.status}</td><td>${t.dueDate || '-'}</td><td>${t.priority || '-'}</td></tr>`);
+                filtered.forEach(t => tbl += `<tr onclick="selectTask('${t.id}')" style="cursor:pointer;"><td title="${attrEscape(t.title)}">${escapeHtml(truncateText(t.title, 52))}</td><td>${t.status}</td><td>${t.dueDate || '-'}</td><td>${t.priority || '-'}</td></tr>`);
                 tbl += `</table>`;
-                const noDue = noDeadline.length ? `<div style="margin-top:8px; font-size:12px; color:var(--text-muted);">Без дедлайна: ${noDeadline.map(t => t.title).join(', ')}</div>` : '';
+                const noDue = noDeadline.length ? `<div style="margin-top:8px; font-size:12px; color:var(--text-muted);">Без дедлайна: ${noDeadline.map(t => escapeHtml(truncateText(t.title, 40))).join(', ')}</div>` : '';
                 grid.innerHTML = tbl + noDue;
                 return;
             }
@@ -965,13 +1024,16 @@
                     ? `<div class="status-visual">WAIT</div>`
                     : `<div class="status-visual">${emoji}</div>`;
                 const isActive = selectedTaskId === t.id ? 'active-task' : '';
+                const titleTip = attrEscape(t.title || '');
+                const titleShow = escapeHtml(truncateText(t.title, 44));
+                const descHtml = escapeHtml(t.description || '...');
                 document.getElementById(`group-${g.key}`).innerHTML += `<div class="task-card status-${t.status} ${prior} ${isActive}" data-task-id="${t.id}" draggable="true" ondragstart="startDragTask(event,'${t.id}')" onclick="selectTask('${t.id}'); this.classList.toggle('expanded')">
-                    <div style="display:flex; justify-content:space-between;"><b>${t.title}</b><span class="status-chip ${t.status}">${(t.status || 'plan').toUpperCase()}</span></div>
+                    <div style="display:flex; justify-content:space-between; gap:8px; align-items:flex-start; min-width:0;"><b class="task-card-title" title="${titleTip}">${titleShow}</b><span class="status-chip ${t.status}" style="flex-shrink:0;">${(t.status || 'plan').toUpperCase()}</span></div>
                     ${statusVisual}
-                    <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">#${t.tag} | 📅 ${t.dueDate || '-'}</div>
+                    <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">#${escapeHtml(t.tag || '')} | 📅 ${t.dueDate || '-'}</div>
                     ${doneMeta}
                     <div class="task-details" onclick="event.stopPropagation()">
-                        <p style="font-size:12px;">${t.description || '...'}</p>
+                        <p style="font-size:12px;">${descHtml}</p>
                     </div>
                 </div>`;
             }));
@@ -988,8 +1050,10 @@
             for(let d=1; d<=days; d++) {
                 const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 const tsks = allItems.filter(i => i.itemType==='task' && i.dueDate === ds && i.space === currentSpace);
-                let th = ''; tsks.forEach(t => th += `<div class="cal-day-task">${t.title}</div>`);
-                grid.innerHTML += `<div class="cal-day ${ds === todayStr ? 'today' : ''}" onclick="selectDateFilter('${ds}')" ondragover="allowDropTask(event)" ondrop="dropTaskToDate(event,'${ds}')"><span style="align-self:flex-end">${d}</span>${th}<button class="btn-icon" style="font-size:10px; margin-top:auto; align-self:flex-start;" onclick="event.stopPropagation(); openTaskModalByDate('${ds}')">+ задача</button></div>`;
+                let th = '';
+                const calTitleMax = 22;
+                tsks.forEach(t => { th += `<div class="cal-day-task" title="${attrEscape(t.title)}">${escapeHtml(truncateText(t.title, calTitleMax))}</div>`; });
+                grid.innerHTML += `<div class="cal-day ${ds === todayStr ? 'today' : ''}" onclick="selectDateFilter('${ds}')" ondragover="allowDropTask(event)" ondrop="dropTaskToDate(event,'${ds}')"><span class="cal-day-num">${d}</span><div class="cal-day-tasks">${th}</div><button class="btn-icon" style="font-size:10px;" onclick="event.stopPropagation(); openTaskModalByDate('${ds}')">+ задача</button></div>`;
             }
             syncNotesHeight();
         };

@@ -28,13 +28,29 @@
         button:hover { background: var(--primary-hover); }
         .btn-secondary { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
         /* minmax(0,1fr) — иначе широкая канва раздвигает сетку и уносит правую колонку за экран */
-        .layout { display: grid; grid-template-columns: 220px minmax(0, 1fr) 280px; flex: 1; min-height: 0; width: 100%; overflow: hidden; }
+        .layout { display: grid; grid-template-columns: 260px minmax(0, 1fr) 280px; flex: 1; min-height: 0; width: 100%; overflow: hidden; }
         @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; grid-template-rows: auto minmax(200px, 1fr) auto; overflow: auto; } }
-        .sidebar { border-right: 1px solid var(--border-color); padding: 12px; overflow-x: hidden; overflow-y: auto; background: var(--bg-card); width: 220px; min-width: 220px; max-width: 220px; }
+        .sidebar { border-right: 1px solid var(--border-color); padding: 12px; overflow-x: hidden; overflow-y: auto; background: var(--bg-card); width: 260px; min-width: 260px; max-width: 260px; }
         @media (max-width: 1000px) { .sidebar { width: 100%; max-width: none; min-width: 0; border-right: none; border-bottom: 1px solid var(--border-color); } }
         .sidebar h3 { font-size: 12px; color: var(--text-muted); margin: 0 0 8px; text-transform: uppercase; }
         .tz-list-item { padding: 10px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 8px; cursor: pointer; font-size: 13px; }
         .tz-list-item.active { border-color: var(--primary); background: rgba(99,102,241,0.08); }
+        .tz-list-toolbar { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+        .tz-list-toolbar input, .tz-list-toolbar select { width: 100%; margin: 0; padding: 6px 8px; font-size: 12px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-heading); box-sizing: border-box; }
+        .tz-table-wrap { max-height: min(38vh, 320px); overflow: auto; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body); }
+        .tz-spec-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .tz-spec-table th { position: sticky; top: 0; background: var(--bg-card); z-index: 1; text-align: left; color: var(--text-muted); font-weight: 600; padding: 8px 6px; border-bottom: 1px solid var(--border-color); }
+        .tz-spec-table td { padding: 6px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        .tz-spec-table tr:last-child td { border-bottom: none; }
+        .tz-spec-table .tz-col-actions { width: 1%; white-space: nowrap; }
+        .tz-table-row { cursor: pointer; }
+        .tz-table-row:hover td { background: rgba(99,102,241,0.06); }
+        body.light-theme .tz-table-row:hover td { background: rgba(79,70,229,0.08); }
+        .tz-table-row.tz-row-active td { background: rgba(99,102,241,0.12); }
+        body.light-theme .tz-table-row.tz-row-active td { background: rgba(79,70,229,0.12); }
+        .tz-title-cell { max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .tz-author-cell { max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .tz-spec-table .btn-del-tz { padding: 4px 6px; font-size: 10px; width: auto; margin: 0; }
         .palette-item { padding: 8px 10px; margin-bottom: 6px; border-radius: 8px; border: 1px dashed var(--border-color); cursor: grab; font-size: 12px; user-select: none; }
         .palette-item:active { cursor: grabbing; }
         .main { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; flex: 1; overflow: hidden; }
@@ -116,7 +132,30 @@
             <aside class="sidebar">
                 <h3>Мои ТЗ</h3>
                 <button type="button" onclick="createNewTz()" style="width:100%; margin-bottom:12px;">+ Новое ТЗ</button>
-                <div id="tz-list"></div>
+                <div class="tz-list-toolbar">
+                    <input type="search" id="tz-filter-search" placeholder="Поиск по названию…" aria-label="Поиск по названию" autocomplete="off">
+                    <select id="tz-filter-status" aria-label="Фильтр по статусу">
+                        <option value="all">Все статусы</option>
+                        <option value="draft">Черновик</option>
+                        <option value="review">Согласование</option>
+                        <option value="sent">Отправлено</option>
+                        <option value="done">Выполнено</option>
+                    </select>
+                    <input type="search" id="tz-filter-author" placeholder="Фильтр по автору…" aria-label="Фильтр по автору" autocomplete="off">
+                </div>
+                <div class="tz-table-wrap">
+                    <table class="tz-spec-table">
+                        <thead>
+                            <tr>
+                                <th>Название</th>
+                                <th>Статус</th>
+                                <th>Автор</th>
+                                <th class="tz-col-actions" aria-hidden="true"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tz-table-body"></tbody>
+                    </table>
+                </div>
                 <h3 style="margin-top:16px;">Элементы (на канву)</h3>
                 <p style="font-size:11px; color:var(--text-muted); margin:0 0 8px;">Клик по типу — добавить в центр канвы</p>
                 <div class="palette-item" data-kind="catalog" onclick="addNode('catalog')">📁 Справочник</div>
@@ -203,7 +242,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { collection, addDoc, updateDoc, doc, query, where, orderBy, onSnapshot, getDocs, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { collection, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, onSnapshot, getDocs, getDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { initializeFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -229,6 +268,7 @@
         let selectedId = null;
         let dragState = null;
         let listUnsub = null;
+        let tzTableDocs = [];
         let tzBootstrapped = false;
         let schemaTextDebounce = null;
         let activeShareToken = null;
@@ -559,10 +599,109 @@
         }
 
         function refreshListActive() {
-            document.querySelectorAll('.tz-list-item').forEach(el => {
-                el.classList.toggle('active', el.dataset.docId === currentId);
+            document.querySelectorAll('.tz-table-row').forEach(el => {
+                el.classList.toggle('tz-row-active', el.dataset.docId === currentId);
             });
         }
+
+        function renderTzTable() {
+            const tbody = document.getElementById('tz-table-body');
+            if (!tbody) return;
+            const qTitle = (document.getElementById('tz-filter-search')?.value || '').trim().toLowerCase();
+            const st = document.getElementById('tz-filter-status')?.value || 'all';
+            const qAuthor = (document.getElementById('tz-filter-author')?.value || '').trim().toLowerCase();
+            tbody.replaceChildren();
+            tzTableDocs.forEach(({ id, data }) => {
+                const title = data.title || 'Без названия';
+                if (qTitle && !String(title).toLowerCase().includes(qTitle)) return;
+                const status = data.status || 'draft';
+                if (st !== 'all' && status !== st) return;
+                const author = data.authorLabel || '—';
+                if (qAuthor && !String(author).toLowerCase().includes(qAuthor)) return;
+                const tr = document.createElement('tr');
+                tr.className = 'tz-table-row' + (id === currentId ? ' tz-row-active' : '');
+                tr.dataset.docId = id;
+                tr.onclick = () => loadTz(id, data);
+                const tdTitle = document.createElement('td');
+                tdTitle.className = 'tz-title-cell';
+                tdTitle.title = title;
+                tdTitle.textContent = title;
+                const tdStatus = document.createElement('td');
+                tdStatus.textContent = STATUS_LABELS[status] || status;
+                const tdAuthor = document.createElement('td');
+                tdAuthor.className = 'tz-author-cell';
+                tdAuthor.title = author;
+                tdAuthor.textContent = author;
+                const tdAct = document.createElement('td');
+                tdAct.className = 'tz-col-actions';
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.className = 'btn-secondary btn-del-tz';
+                delBtn.textContent = 'Удалить';
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    window.deleteTzById(id);
+                };
+                tdAct.appendChild(delBtn);
+                tr.append(tdTitle, tdStatus, tdAuthor, tdAct);
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function deleteTzShareAndComments(shareToken) {
+            if (!shareToken) return;
+            try {
+                const cref = collection(db, 'tzShares', shareToken, 'comments');
+                const cs = await getDocs(cref);
+                let batch = writeBatch(db);
+                let ops = 0;
+                for (const c of cs.docs) {
+                    batch.delete(doc(db, 'tzShares', shareToken, 'comments', c.id));
+                    ops++;
+                    if (ops >= 400) {
+                        await batch.commit();
+                        batch = writeBatch(db);
+                        ops = 0;
+                    }
+                }
+                batch.delete(doc(db, 'tzShares', shareToken));
+                await batch.commit();
+            } catch (e) {
+                try { await deleteDoc(doc(db, 'tzShares', shareToken)); } catch (_) { /* ignore */ }
+            }
+        }
+
+        window.deleteTzById = async function (docId) {
+            if (!uid || !docId) return;
+            if (!confirm('Удалить это ТЗ? Публикация по ссылке перестанет работать.')) return;
+            try {
+                const ref = doc(db, 'tzSpecs', docId);
+                const snap = await getDoc(ref);
+                if (!snap.exists()) return;
+                const token = snap.data().shareToken || null;
+                if (token) await deleteTzShareAndComments(token);
+                await deleteDoc(ref);
+                if (currentId === docId) {
+                    currentId = null;
+                    activeShareToken = null;
+                    stopGuestComments();
+                    const q2 = await getDocs(query(collection(db, 'tzSpecs'), where('userId', '==', uid)));
+                    if (q2.empty) await window.createNewTz();
+                    else loadTz(q2.docs[0].id, q2.docs[0].data());
+                }
+            } catch (e) {
+                alert('Не удалось удалить: ' + (e.message || e));
+            }
+        };
+
+        (function bindTzListFilters() {
+            const s = document.getElementById('tz-filter-search');
+            const f = document.getElementById('tz-filter-status');
+            const a = document.getElementById('tz-filter-author');
+            if (s) s.addEventListener('input', () => renderTzTable());
+            if (f) f.addEventListener('change', () => renderTzTable());
+            if (a) a.addEventListener('input', () => renderTzTable());
+        })();
 
         onAuthStateChanged(auth, async user => {
             if (user && user.emailVerified) {
@@ -570,17 +709,11 @@
                 showApp();
                 if (listUnsub) listUnsub();
                 listUnsub = onSnapshot(query(collection(db, 'tzSpecs'), where('userId', '==', uid)), snap => {
-                    const el = document.getElementById('tz-list');
-                    el.innerHTML = '';
+                    tzTableDocs = [];
                     snap.forEach(d => {
-                        const data = d.data();
-                        const div = document.createElement('div');
-                        div.className = 'tz-list-item' + (d.id === currentId ? ' active' : '');
-                        div.dataset.docId = d.id;
-                        div.textContent = data.title || 'Без названия';
-                        div.onclick = () => loadTz(d.id, data);
-                        el.appendChild(div);
+                        tzTableDocs.push({ id: d.id, data: d.data() });
                     });
+                    renderTzTable();
                     refreshListActive();
                 });
                 if (!tzBootstrapped) {
@@ -599,16 +732,21 @@
                 selectedId = null;
                 tzBootstrapped = false;
                 if (listUnsub) { listUnsub(); listUnsub = null; }
+                tzTableDocs = [];
+                const tb = document.getElementById('tz-table-body');
+                if (tb) tb.innerHTML = '';
                 showGate();
             }
         });
 
         window.createNewTz = async () => {
             if (!uid) return;
+            const authorLabel = auth.currentUser?.displayName || auth.currentUser?.email || '—';
             const ref = await addDoc(collection(db, 'tzSpecs'), {
                 userId: uid,
                 title: 'Новое ТЗ',
                 status: 'draft',
+                authorLabel,
                 nodes: [],
                 edges: [],
                 textModelManual: '',
@@ -662,14 +800,21 @@
             const status = document.getElementById('tz-status').value;
             syncEdgesFromRequisites();
             const textModelManual = document.getElementById('tz-text-manual')?.value ?? '';
-            await updateDoc(doc(db, 'tzSpecs', currentId), {
+            const prevSnap = await getDoc(doc(db, 'tzSpecs', currentId));
+            const prev = prevSnap.exists() ? prevSnap.data() : {};
+            const patch = {
                 title,
                 status,
                 nodes,
                 edges,
                 textModelManual,
                 updatedAt: new Date().toISOString()
-            });
+            };
+            if (!prev.authorLabel) {
+                const al = auth.currentUser?.displayName || auth.currentUser?.email;
+                if (al) patch.authorLabel = al;
+            }
+            await updateDoc(doc(db, 'tzSpecs', currentId), patch);
             alert('Сохранено');
         };
 

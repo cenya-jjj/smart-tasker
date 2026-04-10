@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Демо ТЗ — пример для просмотра</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #121212; --bg-card: #1e1e1e; --text-main: #e0e0e0; --text-heading: #fff;
+            --text-muted: #a1a1aa; --border-color: #2a2a2a; --input-bg: #2a2a2a; --input-border: #3f3f46;
+            --primary: #6366f1; --primary-hover: #4f46e5;
+        }
+        * { box-sizing: border-box; }
+        html, body { height: 100%; margin: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); min-height: 100%; display: flex; flex-direction: column; }
+        .view-top { flex-shrink: 0; padding: 14px 18px; border-bottom: 1px solid var(--border-color); background: var(--bg-card); }
+        .view-top h1 { margin: 0 0 6px; font-size: 18px; color: var(--text-heading); }
+        .view-top .meta { font-size: 12px; color: var(--text-muted); }
+        .demo-badge { display: inline-block; margin-top: 8px; padding: 4px 10px; border-radius: 8px; background: rgba(99,102,241,0.15); color: var(--primary); font-size: 11px; font-weight: 600; }
+        .view-grid {
+            flex: 1;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: minmax(0, 1fr);
+        }
+        .view-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; height: 100%; }
+        .view-tabs { display: flex; gap: 4px; margin-top: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--border-color); }
+        .view-tab { cursor: pointer; padding: 10px 16px; font-size: 13px; font-weight: 600; font-family: inherit; border: none; border-radius: 10px 10px 0 0; background: transparent; color: var(--text-muted); margin-bottom: -1px; border-bottom: 2px solid transparent; }
+        .view-tab:hover { color: var(--text-main); background: rgba(99,102,241,0.06); }
+        .view-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(99,102,241,0.08); }
+        .view-tab-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+        .view-tab-panel.hidden { display: none !important; }
+        .view-scroll { flex: 1; overflow: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+        .canvas-wrap { position: relative; overflow: auto; flex: 1; min-height: 320px; background: repeating-linear-gradient(0deg, transparent, transparent 19px, var(--border-color) 20px), repeating-linear-gradient(90deg, transparent, transparent 19px, var(--border-color) 20px); background-size: 20px 20px; background-color: var(--bg-body); border-radius: 12px; border: 1px solid var(--border-color); }
+        .canvas-inner { position: relative; width: 2000px; height: 1200px; }
+        .tz-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        .tz-node { position: absolute; z-index: 2; min-width: 200px; max-width: 280px; width: max-content; background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 12px; padding: 8px; pointer-events: none; }
+        .tz-node.kind-document { border-left: 4px solid #f59e0b; }
+        .tz-node.kind-catalog { border-left: 4px solid #3b82f6; }
+        .tz-node.kind-register { border-left: 4px solid #8b5cf6; }
+        .tz-node.kind-report { border-left: 4px solid #10b981; }
+        .tz-node.kind-note { border-left: 4px solid #64748b; }
+        .tz-node-title { font-weight: 800; font-size: 12px; color: var(--text-heading); margin-bottom: 4px; }
+        .tz-node-meta { font-size: 10px; color: var(--text-muted); margin-bottom: 6px; }
+        .tz-node-reqs { margin: 0; padding: 6px 0 0; border-top: 1px solid var(--border-color); list-style: none; font-size: 10px; line-height: 1.35; }
+        .tz-node-reqs li { padding: 2px 0; word-break: break-word; }
+        .tz-node-reqs .req-type { color: var(--text-muted); }
+        .block-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin: 0 0 6px; }
+        .desc-split { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr); min-height: 0; gap: 0; border-top: 1px solid var(--border-color); }
+        @media (max-width: 800px) { .desc-split { grid-template-columns: 1fr; } }
+        .desc-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 12px; border-right: 1px solid var(--border-color); overflow: hidden; }
+        .desc-col:last-child { border-right: none; }
+        .dump-fill { flex: 1; min-height: 120px; margin: 0; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-body); font-size: 13px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; font-family: 'Inter', ui-monospace, Menlo, monospace; overflow-y: auto; }
+        .page-root { flex: 1; min-height: 0; display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+        .side-note { margin: 12px 18px 18px; padding: 12px 14px; border-radius: 10px; border: 1px dashed var(--border-color); font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+    </style>
+</head>
+<body>
+    <div class="page-root">
+        <div class="view-top">
+            <h1 id="pub-title">ТЗ</h1>
+            <div class="meta" id="pub-meta"></div>
+            <span class="demo-badge">Статический пример — без входа и Firebase. Живая публикация: tz-view.html?s=…</span>
+            <div class="view-tabs" role="tablist">
+                <button type="button" class="view-tab active" role="tab" data-tab="schema" aria-selected="true">Графическая схема</button>
+                <button type="button" class="view-tab" role="tab" data-tab="desc" aria-selected="false">Описание</button>
+            </div>
+        </div>
+        <div class="view-grid">
+            <div class="view-main">
+                <div id="panel-schema" class="view-tab-panel">
+                    <div class="view-scroll">
+                        <p class="block-label">Снимок схемы (как у гостя по ссылке)</p>
+                        <div class="canvas-wrap" id="canvas-wrap">
+                            <div class="canvas-inner" id="canvas-inner">
+                                <svg class="tz-svg" id="tz-svg"></svg>
+                                <div id="nodes-layer"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="panel-desc" class="view-tab-panel hidden">
+                    <div class="desc-split">
+                        <div class="desc-col">
+                            <p class="block-label">Сформированное описание</p>
+                            <pre id="pub-schema-public" class="dump-fill"></pre>
+                        </div>
+                        <div class="desc-col">
+                            <p class="block-label">Текст автора ТЗ</p>
+                            <pre id="pub-manual-split" class="dump-fill"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="side-note">Файл лежит в репозитории как <strong>tz-demo-sample.html</strong>. Можно открыть локально (двойной клик) или выложить на хостинг/GitHub Pages и отправить URL.</p>
+    </div>
+    <script>
+        const KIND_LABELS = { catalog: 'Справочник', document: 'Документ', register: 'Регистр', report: 'Отчёт', note: 'Примечание' };
+        const STATUS_LABELS = { draft: 'Черновик', review: 'Согласование', sent: 'Отправлено', done: 'Выполнено' };
+
+        const DEMO_SNAPSHOT = {
+            title: 'Демо: приход товара на склад (1С)',
+            status: 'review',
+            nodes: [
+                { id: 'n_nom', kind: 'catalog', name: 'Номенклатура', x: 100, y: 160, requisites: [
+                    { name: 'Код', type: 'string' },
+                    { name: 'Наименование', type: 'string' },
+                    { name: 'Ед. изм.', type: 'string' }
+                ]},
+                { id: 'n_ctr', kind: 'catalog', name: 'Контрагенты', x: 100, y: 420, requisites: [
+                    { name: 'ИНН', type: 'string' },
+                    { name: 'Наименование', type: 'string' }
+                ]},
+                { id: 'n_wh', kind: 'catalog', name: 'Склады', x: 100, y: 600, requisites: [
+                    { name: 'Код склада', type: 'string' }
+                ]},
+                { id: 'n_doc', kind: 'document', name: 'Приходная накладная', x: 480, y: 280, requisites: [
+                    { name: 'Контрагент', type: 'ref', refNodeId: 'n_ctr' },
+                    { name: 'Склад', type: 'ref', refNodeId: 'n_wh' },
+                    { name: 'ТЧ «Товары»: номенклатура', type: 'ref', refNodeId: 'n_nom' },
+                    { name: 'ТЧ «Товары»: количество', type: 'number' },
+                    { name: 'ТЧ «Товары»: цена', type: 'number' }
+                ]},
+                { id: 'n_reg', kind: 'register', name: 'Товары на складах (остатки)', x: 900, y: 260, requisites: [
+                    { name: 'Измерения: склад, номенклатура', type: 'string' },
+                    { name: 'Ресурс: количество', type: 'number' }
+                ]},
+                { id: 'n_rep', kind: 'report', name: 'Ведомость по складу', x: 900, y: 520, requisites: [
+                    { name: 'Отбор: период, склад', type: 'string' }
+                ]},
+                { id: 'n_note', kind: 'note', name: 'Примечание для внедрения', x: 480, y: 560, requisites: [
+                    { name: 'Провести документ — движения по регистру', type: 'string' }
+                ]}
+            ],
+            edges: [
+                { from: 'n_doc', to: 'n_reg', label: 'приход (+) ' },
+                { from: 'n_reg', to: 'n_rep', label: 'источник данных' }
+            ],
+            schemaDump: [
+                'ТЗ: Демо: приход товара на склад (1С)',
+                'Статус: Согласование',
+                '',
+                '── Объекты ──',
+                '• «Номенклатура» (Справочник)',
+                '  — Код (string)',
+                '  — Наименование (string)',
+                '  — Ед. изм. (string)',
+                '• «Контрагенты» (Справочник)',
+                '  — ИНН (string)',
+                '  — Наименование (string)',
+                '• «Склады» (Справочник)',
+                '  — Код склада (string)',
+                '• «Приходная накладная» (Документ)',
+                '  — Контрагент → Контрагенты',
+                '  — Склад → Склады',
+                '  — ТЧ «Товары»: номенклатура → Номенклатура',
+                '  — ТЧ «Товары»: количество (number)',
+                '  — ТЧ «Товары»: цена (number)',
+                '• «Товары на складах (остатки)» (Регистр)',
+                '  — Измерения: склад, номенклатура (string)',
+                '  — Ресурс: количество (number)',
+                '• «Ведомость по складу» (Отчёт)',
+                '  — Отбор: период, склад (string)',
+                '• «Примечание для внедрения» (Примечание)',
+                '  — Провести документ — движения по регистру (string)',
+                '',
+                '── Связи ──',
+                '• «Приходная накладная» —[приход (+) ]→ «Товары на складах (остатки)»',
+                '• «Товары на складах (остатки)» —[источник данных]→ «Ведомость по складу»'
+            ].join('\n'),
+            textModelManual: [
+                'Цель: показать заказчику состав объектов и связей без доступа к базе.',
+                '',
+                'Согласовать:',
+                '1) Состав реквизитов шапки и ТЧ приходной.',
+                '2) Структуру регистра остатков (измерения/ресурсы).',
+                '3) Отчёт только читает регистр, проводок из отчёта нет.',
+                '',
+                'Сроки и ответственных — по отдельному письму.'
+            ].join('\n')
+        };
+
+        let publishedNodes = DEMO_SNAPSHOT.nodes;
+        let publishedEdges = DEMO_SNAPSHOT.edges;
+
+        function escapeHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s == null ? '' : String(s);
+            return d.innerHTML;
+        }
+
+        function requisiteLine(n, r, byId) {
+            const name = escapeHtml(r.name || '—');
+            if (r.type === 'ref' && r.refNodeId) {
+                const tgt = byId[r.refNodeId];
+                return '<li>' + name + ' <span class="req-type">→ ' + escapeHtml(tgt ? (tgt.name || tgt.id) : r.refNodeId) + '</span></li>';
+            }
+            return '<li>' + name + ' <span class="req-type">(' + escapeHtml(r.type || '') + ')</span></li>';
+        }
+
+        function renderNodes(nodes) {
+            const layer = document.getElementById('nodes-layer');
+            layer.innerHTML = '';
+            const byId = Object.fromEntries(nodes.map(n => [n.id, n]));
+            nodes.forEach(n => {
+                const div = document.createElement('div');
+                div.className = 'tz-node kind-' + (n.kind || 'note');
+                div.dataset.id = n.id;
+                div.style.left = (n.x || 0) + 'px';
+                div.style.top = (n.y || 0) + 'px';
+                const reqs = n.requisites || [];
+                let reqBlock = '';
+                if (reqs.length) {
+                    reqBlock = '<ul class="tz-node-reqs">' + reqs.map(r => requisiteLine(n, r, byId)).join('') + '</ul>';
+                }
+                div.innerHTML = '<div class="tz-node-title">' + escapeHtml(n.name) + '</div><div class="tz-node-meta">' + escapeHtml(KIND_LABELS[n.kind] || n.kind) + '</div>' + reqBlock;
+                layer.appendChild(div);
+            });
+        }
+
+        function nodeBottom(n) {
+            const found = document.querySelector('#nodes-layer .tz-node[data-id="' + n.id + '"]');
+            const w = found && found.offsetWidth ? found.offsetWidth : 200;
+            const hh = found && found.offsetHeight ? found.offsetHeight : 72;
+            return { x: (n.x || 0) + w / 2, y: (n.y || 0) + hh };
+        }
+
+        function nodeTop(n) {
+            const found = document.querySelector('#nodes-layer .tz-node[data-id="' + n.id + '"]');
+            const w = found && found.offsetWidth ? found.offsetWidth : 200;
+            return { x: (n.x || 0) + w / 2, y: (n.y || 0) };
+        }
+
+        function renderEdges(edges, nodes) {
+            const svg = document.getElementById('tz-svg');
+            svg.setAttribute('viewBox', '0 0 2000 1200');
+            const byId = Object.fromEntries(nodes.map(n => [n.id, n]));
+            let html = '';
+            (edges || []).forEach(e => {
+                const a = byId[e.from];
+                const b = byId[e.to];
+                if (!a || !b) return;
+                const p1 = nodeBottom(a);
+                const p2 = nodeTop(b);
+                const mx = (p1.x + p2.x) / 2;
+                html += '<path d="M ' + p1.x + ' ' + p1.y + ' C ' + mx + ' ' + p1.y + ', ' + mx + ' ' + p2.y + ', ' + p2.x + ' ' + p2.y + '" fill="none" stroke="rgba(99,102,241,0.7)" stroke-width="2"/>';
+                const lab = (e.label || '').replace(/</g, '');
+                html += '<text x="' + mx + '" y="' + ((p1.y + p2.y) / 2) + '" fill="#a1a1aa" font-size="10" text-anchor="middle">' + escapeHtml(lab) + '</text>';
+            });
+            svg.innerHTML = html;
+        }
+
+        document.getElementById('pub-title').textContent = DEMO_SNAPSHOT.title;
+        document.getElementById('pub-meta').textContent =
+            'Статус: ' + (STATUS_LABELS[DEMO_SNAPSHOT.status] || DEMO_SNAPSHOT.status)
+            + ' · пример для демонстрации интерфейса';
+
+        document.getElementById('pub-schema-public').textContent = DEMO_SNAPSHOT.schemaDump;
+        document.getElementById('pub-manual-split').textContent = DEMO_SNAPSHOT.textModelManual;
+
+        document.querySelectorAll('.view-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                document.querySelectorAll('.view-tab').forEach(b => {
+                    b.classList.toggle('active', b === btn);
+                    b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+                });
+                document.getElementById('panel-schema').classList.toggle('hidden', tab !== 'schema');
+                document.getElementById('panel-desc').classList.toggle('hidden', tab !== 'desc');
+                if (tab === 'schema') {
+                    requestAnimationFrame(() => renderEdges(publishedEdges, publishedNodes));
+                }
+            });
+        });
+
+        renderNodes(publishedNodes);
+        requestAnimationFrame(() => renderEdges(publishedEdges, publishedNodes));
+    </script>
+</body>
+</html>
