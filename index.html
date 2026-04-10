@@ -99,16 +99,12 @@
         .status-visual { margin-top: 6px; min-height: 18px; display: flex; align-items: center; gap: 8px; }
         .status-visual .gear { display: inline-block; font-size: 17px; }
         .status-visual .hammer { display: inline-block; font-size: 16px; }
-        .task-card.status-wait .status-visual { color: #a5d8ff; text-shadow: 0 0 6px rgba(165, 216, 255, 0.7); }
-        .task-card.status-wait::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            border-radius: 12px;
-            background: linear-gradient(135deg, rgba(173, 216, 255, 0.2), rgba(200, 235, 255, 0.08));
-            box-shadow: inset 0 0 0 1px rgba(173, 216, 255, 0.38), inset 0 0 16px rgba(173, 216, 255, 0.22);
-        }
+        .task-card.status-wait { border-color: #8ad5ff !important; box-shadow: 0 0 0 1px rgba(138, 213, 255, 0.45), 0 0 12px rgba(138, 213, 255, 0.2); }
+        .task-card.status-wait .status-visual { color: #bce9ff; }
+        .dashboard-workspace { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start; }
+        .task-side-panel { background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 16px; padding: 14px; position: sticky; top: 20px; }
+        .task-side-empty { color: var(--text-muted); font-size: 13px; }
+        @media (max-width: 1100px) { .dashboard-workspace { grid-template-columns: 1fr; } .task-side-panel { position: static; } }
 
         .stats-table { width: 100%; border-collapse: collapse; font-size: 12px; }
         .stats-table th, .stats-table td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color); }
@@ -190,6 +186,8 @@
 
         <!-- ВЬЮ: ДАШБОРД -->
         <div id="view-dashboard">
+            <div class="dashboard-workspace">
+            <div>
             <div class="creation-area">
                 <div class="spaces-tabs" id="spaces-tabs">
                     <div class="space-tab active" onclick="setSpace('personal')">Личные</div>
@@ -235,6 +233,10 @@
                             <option value="priorityDesc">Высокий приоритет</option>
                             <option value="newest">Сначала новые</option>
                         </select>
+                        <select id="tasks-view-mode" onchange="renderTasks()" style="margin:0; padding:6px; width:auto; font-size:12px;">
+                            <option value="board">Доска</option>
+                            <option value="table">Таблица</option>
+                        </select>
                         <button class="btn-secondary" style="width:auto; padding:6px 12px; margin:0;" onclick="document.getElementById('filter-date').value=''; renderTasks();">Сброс</button>
                         <label style="display:flex; align-items:center; gap:5px; font-size:12px; cursor:pointer;">
                             <input type="checkbox" id="setting-show-done" onchange="renderTasks()" style="width:auto; margin:0;"> Show Done
@@ -242,6 +244,29 @@
                     </div>
                 </div>
                 <div id="tasks-grid" class="tasks-grid"></div>
+            </div>
+            </div>
+            <div class="task-side-panel" id="task-side-panel">
+                <h3 style="margin-bottom:8px;">Карточка задачи</h3>
+                <div id="task-side-empty" class="task-side-empty">Нажмите на задачу на доске, чтобы увидеть и редактировать поля.</div>
+                <div id="task-side-form" class="hidden">
+                    <input id="side-title" type="text" placeholder="Название">
+                    <textarea id="side-desc" rows="4" placeholder="Описание"></textarea>
+                    <div style="display:flex; gap:8px;">
+                        <input id="side-emoji" type="text" placeholder="Эмодзи" maxlength="2">
+                        <input id="side-tag" type="text" placeholder="Тег">
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <select id="side-priority"><option value="low">Низкая</option><option value="medium">Средняя</option><option value="high">Высокая</option></select>
+                        <select id="side-status"><option value="plan">Plan</option><option value="todo">To Do</option><option value="wait">Wait</option><option value="done">Done</option></select>
+                    </div>
+                    <label style="font-size:11px; color:var(--text-muted);">Дедлайн</label>
+                    <input id="side-date" type="date">
+                    <label style="font-size:11px; color:var(--text-muted);">Дата завершения</label>
+                    <input id="side-completed" type="date">
+                    <button onclick="saveTaskFromSidePanel()">Сохранить изменения</button>
+                </div>
+            </div>
             </div>
         </div>
 
@@ -335,7 +360,7 @@
             <input type="text" id="modal-task-title" placeholder="Что сделать?">
             <textarea id="modal-task-desc" rows="3" placeholder="Описание..."></textarea>
             <div style="display:flex; gap:10px;">
-                <input type="text" id="modal-task-emoji" placeholder="Эмодзи (напр. 🚀)" maxlength="2">
+                <input type="text" id="modal-task-emoji" placeholder="Эмодзи задачи (напр. 🦫)" maxlength="2">
                 <select id="modal-task-emoji-preset" onchange="applyEmojiPreset(this.value)">
                     <option value="">Животные эмодзи</option>
                     <option value="🦫">🦫 Капибара</option>
@@ -351,14 +376,14 @@
                     <option value="🦄">🦄 Единорог</option>
                     <option value="🐺">🐺 Волк</option>
                 </select>
-                <input type="text" id="modal-task-tag" placeholder="Тег">
+                <input type="text" id="modal-task-tag" placeholder="Тег задачи">
                 <select id="modal-task-priority"><option value="low">Низкая</option><option value="medium">Средняя</option><option value="high">Высокая 🔥</option></select>
             </div>
             <div style="display:flex; gap:10px;">
-                <input type="date" id="modal-task-date">
+                <input type="date" id="modal-task-date" title="Дедлайн задачи">
                 <select id="modal-task-status"><option value="plan">Plan</option><option value="todo">To Do</option><option value="wait">Wait</option><option value="done">Done</option></select>
             </div>
-            <input type="date" id="modal-task-completed-date" title="Дата завершения">
+            <input type="date" id="modal-task-completed-date" title="Дата фактического завершения">
             <input type="hidden" id="modal-task-id">
             <input type="hidden" id="modal-source-note-id">
             <div style="display:flex; gap:10px; margin-top:10px;"><button onclick="saveTaskModal()">Сохранить</button><button class="btn-secondary" onclick="closeModals()">Отмена</button></div>
@@ -377,6 +402,7 @@
         <div class="modal-content">
             <h3 id="prompt-title">Ввод</h3>
             <input type="text" id="prompt-input">
+            <textarea id="prompt-textarea" rows="6" class="hidden"></textarea>
             <div style="display:flex; gap:10px;"><button id="prompt-yes-btn">Ок</button><button class="btn-secondary" onclick="closeModals()">Отмена</button></div>
         </div>
     </div>
@@ -395,6 +421,8 @@
                     <option value="">Выберите участника</option>
                 </select>
                 <button id="flash-drive-btn" class="btn-secondary" onclick="sendFlashToUser()">Кинуть флешку участнику ⚡</button>
+                <input id="flash-nick-input" type="text" placeholder="Или ник напрямую: Имя#A1B2C3">
+                <button class="btn-secondary" onclick="sendFlashByNick()">Кинуть по нику ⚡</button>
             </div>
             <div style="display: flex; gap: 10px;">
                 <button onclick="saveProfile()">Сохранить</button>
@@ -421,7 +449,7 @@
         const auth = getAuth(app);
         const db = initializeFirestore(app, { experimentalForceLongPolling: true });
 
-        let allItems = []; let myTeams = []; let currentDate = new Date(); let currentSpace = 'personal'; let unsubTasks = []; let unsubUserDoc = null;
+        let allItems = []; let myTeams = []; let currentDate = new Date(); let currentSpace = 'personal'; let unsubTasks = []; let unsubUserDoc = null; let selectedTaskId = null;
         let flashMembersByTeam = {};
         const tagPattern = /^[A-Z0-9]{6}$/;
 
@@ -492,12 +520,16 @@
             document.getElementById('confirm-modal').classList.remove('hidden');
         };
         
-        window.showPrompt = (t, placeholder, defaultValue, onY) => {
+        window.showPrompt = (t, placeholder, defaultValue, onY, multiline = false) => {
             document.getElementById('prompt-title').innerText = t;
             const input = document.getElementById('prompt-input');
-            input.placeholder = placeholder || '';
-            input.value = defaultValue || '';
-            document.getElementById('prompt-yes-btn').onclick = () => { const v = input.value.trim(); if(v){ closeModals(); onY(v); }};
+            const textarea = document.getElementById('prompt-textarea');
+            input.classList.toggle('hidden', multiline);
+            textarea.classList.toggle('hidden', !multiline);
+            const field = multiline ? textarea : input;
+            field.placeholder = placeholder || '';
+            field.value = defaultValue || '';
+            document.getElementById('prompt-yes-btn').onclick = () => { const v = field.value.trim(); if(v){ closeModals(); onY(v); }};
             document.getElementById('prompt-modal').classList.remove('hidden');
         };
 
@@ -697,7 +729,7 @@
             showPrompt("Редактировать заметку", "Текст заметки...", item.text || item.title, async (newText) => {
                 await updateDoc(doc(db, "tasks", id), { text: newText });
                 showToast("Заметка", "Заметка обновлена");
-            });
+            }, true);
         };
         window.openTaskModal = (id = '') => {
             const titleEl = document.getElementById('task-modal-title');
@@ -777,9 +809,23 @@
             const target = (flashMembersByTeam[teamId] || []).find(m => m.uid === targetUid);
             showToast("Флешка", `Отправлено: ${target?.displayName || "участник"}`);
         };
+        window.sendFlashByNick = async () => {
+            const nick = (document.getElementById('flash-nick-input').value || '').trim();
+            if(!nick) return showToast("Флешка", "Введите ник пользователя");
+            const qU = await getDocs(query(collection(db,"users"), where("displayName","==",nick)));
+            if(qU.empty) return showToast("Флешка", "Пользователь не найден");
+            const targetUid = qU.docs[0].id;
+            if(targetUid === auth.currentUser.uid) return showToast("Флешка", "Себе отправлять нельзя");
+            await setDoc(doc(db, "users", targetUid), { flashSignalAt: Date.now(), flashBy: auth.currentUser.uid }, { merge: true });
+            showToast("Флешка", `Отправлено: ${nick}`);
+        };
         window.applyEmojiPreset = (value) => {
             if(!value) return;
             document.getElementById('modal-task-emoji').value = value;
+        };
+        window.openTaskModalByDate = (date) => {
+            openTaskModal();
+            document.getElementById('modal-task-date').value = date;
         };
 
         window.saveTaskModal = async () => {
@@ -821,6 +867,7 @@
             const status = document.getElementById('filter-status').value;
             const date = document.getElementById('filter-date').value;
             const sortBy = document.getElementById('sort-by').value;
+            const viewMode = document.getElementById('tasks-view-mode').value;
             const showDone = document.getElementById('setting-show-done').checked;
             let filtered = allItems.filter(i => i.itemType==='task' && i.space === currentSpace);
             if(!showDone) filtered = filtered.filter(t => t.status !== 'done');
@@ -834,6 +881,16 @@
                 const bDue = b.dueDate ? new Date(b.dueDate) : new Date('9999-12-31');
                 return sortBy === 'dueDesc' ? bDue - aDue : aDue - bDue;
             });
+
+            if(viewMode === 'table') {
+                const noDeadline = filtered.filter(t => !t.dueDate);
+                let tbl = `<table class="stats-table"><tr><th>Задача</th><th>Статус</th><th>Дедлайн</th><th>Приоритет</th></tr>`;
+                filtered.forEach(t => tbl += `<tr onclick="selectTask('${t.id}')" style="cursor:pointer;"><td>${t.title}</td><td>${t.status}</td><td>${t.dueDate || '-'}</td><td>${t.priority || '-'}</td></tr>`);
+                tbl += `</table>`;
+                const noDue = noDeadline.length ? `<div style="margin-top:8px; font-size:12px; color:var(--text-muted);">Без дедлайна: ${noDeadline.map(t => t.title).join(', ')}</div>` : '';
+                grid.innerHTML = tbl + noDue;
+                return;
+            }
 
             const groups = { plan: [], todo: [], wait: [], done: [] };
             filtered.forEach(t => groups[t.status || 'plan']?.push(t));
@@ -853,9 +910,9 @@
                 const statusVisual = t.status === 'todo'
                     ? `<div class="status-visual"><span class="gear">⚙️</span><span class="hammer">🔨</span></div>`
                     : t.status === 'wait'
-                    ? `<div class="status-visual">❄️ WAIT</div>`
+                    ? `<div class="status-visual">WAIT</div>`
                     : `<div class="status-visual">${emoji}</div>`;
-                document.getElementById(`group-${g.key}`).innerHTML += `<div class="task-card status-${t.status} ${prior}" draggable="true" ondragstart="startDragTask(event,'${t.id}')" onclick="this.classList.toggle('expanded')">
+                document.getElementById(`group-${g.key}`).innerHTML += `<div class="task-card status-${t.status} ${prior}" draggable="true" ondragstart="startDragTask(event,'${t.id}')" onclick="selectTask('${t.id}'); this.classList.toggle('expanded')">
                     <div style="display:flex; justify-content:space-between;"><b>${t.title}</b><span class="status-chip ${t.status}">${(t.status || 'plan').toUpperCase()}</span></div>
                     ${statusVisual}
                     <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">#${t.tag} | 📅 ${t.dueDate || '-'}</div>
@@ -880,7 +937,7 @@
                 const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 const tsks = allItems.filter(i => i.itemType==='task' && i.dueDate === ds && i.space === currentSpace);
                 let th = ''; tsks.forEach(t => th += `<div class="cal-day-task">${t.title}</div>`);
-                grid.innerHTML += `<div class="cal-day ${ds === todayStr ? 'today' : ''}" onclick="selectDateFilter('${ds}')"><span style="align-self:flex-end">${d}</span>${th}</div>`;
+                grid.innerHTML += `<div class="cal-day ${ds === todayStr ? 'today' : ''}" onclick="selectDateFilter('${ds}')" ondragover="allowDropTask(event)" ondrop="dropTaskToDate(event,'${ds}')"><span style="align-self:flex-end">${d}</span>${th}<button class="btn-icon" style="font-size:10px; margin-top:auto; align-self:flex-start;" onclick="event.stopPropagation(); openTaskModalByDate('${ds}')">+ задача</button></div>`;
             }
             syncNotesHeight();
         };
@@ -936,6 +993,13 @@
             await updateDoc(doc(db,"tasks",id), { status, completedAt: null });
             showToast("Статус", `Статус изменен на ${status.toUpperCase()}`);
         };
+        window.dropTaskToDate = async (e, dueDate) => {
+            if(e) e.preventDefault();
+            const id = (e?.dataTransfer?.getData('text/plain') || window.__dragTaskId || '').trim();
+            if(!id) return;
+            await updateDoc(doc(db,"tasks",id), { dueDate, updatedAt: new Date().toISOString() });
+            showToast("Календарь", `Дедлайн: ${dueDate}`);
+        };
         window.changeStatus = async (e,id,status) => {
             if(e) e.stopPropagation();
             let payload = { status };
@@ -953,6 +1017,38 @@
             showToast("Статус", `Статус изменен на ${status.toUpperCase()}`);
         };
         window.convertNoteToTask = (id) => openTaskModal(id);
+        window.selectTask = (id) => {
+            selectedTaskId = id;
+            const task = allItems.find(t => t.id === id);
+            if(!task) return;
+            document.getElementById('task-side-empty').classList.add('hidden');
+            document.getElementById('task-side-form').classList.remove('hidden');
+            document.getElementById('side-title').value = task.title || '';
+            document.getElementById('side-desc').value = task.description || '';
+            document.getElementById('side-emoji').value = task.emoji || '';
+            document.getElementById('side-tag').value = task.tag || '';
+            document.getElementById('side-priority').value = task.priority || 'medium';
+            document.getElementById('side-status').value = task.status || 'plan';
+            document.getElementById('side-date').value = task.dueDate || '';
+            document.getElementById('side-completed').value = task.completedAt ? task.completedAt.split('T')[0] : '';
+        };
+        window.saveTaskFromSidePanel = async () => {
+            if(!selectedTaskId) return;
+            const status = document.getElementById('side-status').value;
+            const completedRaw = document.getElementById('side-completed').value;
+            await updateDoc(doc(db,"tasks",selectedTaskId), {
+                title: document.getElementById('side-title').value.trim(),
+                description: document.getElementById('side-desc').value.trim(),
+                emoji: document.getElementById('side-emoji').value.trim(),
+                tag: document.getElementById('side-tag').value.trim(),
+                priority: document.getElementById('side-priority').value,
+                status,
+                dueDate: document.getElementById('side-date').value || '',
+                completedAt: status === 'done' ? (completedRaw ? `${completedRaw}T12:00:00.000Z` : new Date().toISOString()) : null,
+                updatedAt: new Date().toISOString()
+            });
+            showToast("Карточка", "Изменения сохранены");
+        };
 
         window.saveProfile = async () => {
             const n = document.getElementById('edit-username').value.trim();
