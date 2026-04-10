@@ -101,7 +101,7 @@
         .status-visual .hammer { display: inline-block; font-size: 16px; }
         .task-card.status-wait { border-color: #8ad5ff !important; box-shadow: 0 0 0 1px rgba(138, 213, 255, 0.45), 0 0 12px rgba(138, 213, 255, 0.2); }
         .task-card.status-wait .status-visual { color: #bce9ff; }
-        .tasks-row { display: grid; grid-template-columns: 2.2fr 1.2fr; gap: 16px; align-items: start; margin-top: 20px; }
+        .tasks-row { display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(360px, 1fr); gap: 18px; align-items: start; margin-top: 22px; }
         .task-side-panel { background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 16px; padding: 14px; position: sticky; top: 20px; min-width: 360px; }
         .task-side-empty { color: var(--text-muted); font-size: 13px; }
         .task-side-panel.side-status-plan { border-color: var(--st-plan); }
@@ -112,7 +112,29 @@
         .task-card.active-task { border-color: var(--primary) !important; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3); }
         .field-label { display:block; font-size:11px; color:var(--text-muted); margin-bottom:6px; }
         #task-modal .modal-content { max-width: 560px; }
-        @media (max-width: 1100px) { .tasks-row { grid-template-columns: 1fr; } .task-side-panel { position: static; min-width: 0; } }
+        @media (max-width: 1280px) {
+            .dashboard-container { max-width: 100%; padding: 24px; }
+            .tasks-row { grid-template-columns: minmax(0, 1.8fr) minmax(320px, 1fr); gap: 14px; }
+            .task-list { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+        }
+        @media (max-width: 1100px) {
+            .dashboard-container { padding: 18px; }
+            .middle-grid { grid-template-columns: 1fr; gap: 14px; }
+            .tasks-row { grid-template-columns: 1fr; gap: 14px; }
+            .task-side-panel { position: static; min-width: 0; }
+            .task-list { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+        }
+        @media (max-width: 760px) {
+            body { padding: 10px; }
+            .dashboard-container { padding: 12px; }
+            .tasks-board > div:first-child { flex-wrap: wrap; gap: 8px !important; align-items: flex-start !important; }
+            .tasks-board > div:first-child > div { flex-wrap: wrap; gap: 6px !important; }
+            .tasks-board > div:first-child input,
+            .tasks-board > div:first-child select,
+            .tasks-board > div:first-child button { width: auto; min-width: 120px; }
+            .task-list { grid-template-columns: 1fr; }
+            #task-modal .modal-content { max-width: 94vw; padding: 16px; }
+        }
 
         .stats-table { width: 100%; border-collapse: collapse; font-size: 12px; }
         .stats-table th, .stats-table td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color); }
@@ -225,9 +247,9 @@
 
             <div class="tasks-row">
             <div class="tasks-board">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap: 10px;">
                     <h3 style="margin:0;">Доска задач</h3>
-                    <div style="display:flex; gap:8px;">
+                    <div style="display:flex; gap:8px; align-items:center;">
                         <input type="date" id="filter-date" onchange="renderTasks()" style="margin:0; padding:6px; width:auto; font-size:12px;">
                         <select id="filter-status" onchange="renderTasks()" style="margin:0; padding:6px; width:auto; font-size:12px;">
                             <option value="all">Все статусы</option>
