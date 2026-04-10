@@ -64,6 +64,19 @@
         .req-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; align-items: end; margin-bottom: 8px; font-size: 11px; }
         .hidden { display: none !important; }
         .auth-gate { max-width: 420px; margin: 40px auto; padding: 30px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-color); text-align: center; }
+        .tz-log-drawer { flex-shrink: 0; border-top: 1px solid var(--border-color); background: var(--bg-card); display: flex; flex-direction: column; min-height: 0; }
+        .tz-log-drawer:not(.collapsed) { max-height: min(46vh, 520px); }
+        .tz-log-drawer.collapsed .tz-log-body { display: none; }
+        .tz-log-handle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; cursor: pointer; user-select: none; font-size: 13px; font-weight: 600; color: var(--text-heading); flex-shrink: 0; border-bottom: 1px solid transparent; }
+        .tz-log-drawer:not(.collapsed) .tz-log-handle { border-bottom-color: var(--border-color); }
+        .tz-log-handle:hover { background: rgba(99,102,241,0.08); }
+        .tz-log-handle span.muted { font-weight: 400; color: var(--text-muted); font-size: 11px; }
+        .tz-log-body { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 12px; min-height: 0; flex: 1; overflow: hidden; }
+        .tz-log-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 0; }
+        .tz-schema-dump { margin: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; max-height: min(20vh, 200px); overflow-y: auto; flex-shrink: 0; font-family: ui-monospace, 'SF Mono', Menlo, monospace; }
+        .tz-manual-area { flex: 1; min-height: 140px; width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-heading); font-size: 13px; line-height: 1.5; resize: vertical; font-family: 'Inter', sans-serif; box-sizing: border-box; }
+        .tz-log-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .tz-log-actions button { width: auto; margin: 0; padding: 6px 12px; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -128,6 +141,21 @@
                 </div>
             </aside>
         </div>
+        <div id="tz-log-drawer" class="tz-log-drawer collapsed">
+            <div class="tz-log-handle" onclick="toggleTzLogDrawer()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')toggleTzLogDrawer()">
+                <span>Журнал и текстовая модель <span class="muted">авто из схемы + ваш текст</span></span>
+                <span class="tz-log-chevron">▲</span>
+            </div>
+            <div class="tz-log-body">
+                <div class="tz-log-actions">
+                    <button type="button" class="btn-secondary" onclick="copyTzFullText()">Копировать всё</button>
+                </div>
+                <p class="tz-log-label">Сформировано из схемы (обновляется при изменениях)</p>
+                <pre id="tz-schema-text" class="tz-schema-dump"></pre>
+                <p class="tz-log-label">Ваш текст — оформление, условия, письмо для отправки</p>
+                <textarea id="tz-text-manual" class="tz-manual-area" placeholder="Пишите здесь вручную: вводные, согласования, кому отправить, сроки…"></textarea>
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -149,6 +177,7 @@
         const db = initializeFirestore(app, { experimentalForceLongPolling: true });
 
         const KIND_LABELS = { catalog: 'Справочник', document: 'Документ', register: 'Регистр', report: 'Отчёт', note: 'Примечание' };
+        const STATUS_LABELS = { draft: 'Черновик', review: 'Согласование', sent: 'Отправлено', done: 'Выполнено' };
         const PRIMITIVE_TYPES = ['string', 'number', 'date', 'boolean'];
 
         let uid = null;
@@ -159,8 +188,111 @@
         let dragState = null;
         let listUnsub = null;
         let tzBootstrapped = false;
+        let schemaTextDebounce = null;
 
         if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-theme');
+
+        function initLogDrawer() {
+            const d = document.getElementById('tz-log-drawer');
+            if (!d) return;
+            if (localStorage.getItem('tzLogDrawerOpen') === '1') {
+                d.classList.remove('collapsed');
+                const chev = d.querySelector('.tz-log-chevron');
+                if (chev) chev.textContent = '▼';
+            }
+        }
+        initLogDrawer();
+
+        window.toggleTzLogDrawer = function () {
+            const d = document.getElementById('tz-log-drawer');
+            if (!d) return;
+            d.classList.toggle('collapsed');
+            const open = !d.classList.contains('collapsed');
+            localStorage.setItem('tzLogDrawerOpen', open ? '1' : '0');
+            const chev = d.querySelector('.tz-log-chevron');
+            if (chev) chev.textContent = open ? '▼' : '▲';
+            if (open) scheduleSchemaTextRefresh();
+        };
+
+        window.copyTzFullText = function () {
+            const auto = document.getElementById('tz-schema-text')?.textContent || '';
+            const manual = document.getElementById('tz-text-manual')?.value || '';
+            const full = auto + '\n\n────────── Дополнительный текст ──────────\n\n' + (manual.trim() || '(пусто)');
+            navigator.clipboard.writeText(full).then(() => {
+                alert('Скопировано в буфер обмена');
+            }).catch(() => {
+                alert('Не удалось скопировать — выделите текст вручную');
+            });
+        };
+
+        function buildAutoSchemaText() {
+            const titleEl = document.getElementById('tz-title');
+            const statusEl = document.getElementById('tz-status');
+            const title = (titleEl && titleEl.value.trim()) || 'Без названия';
+            const status = (statusEl && statusEl.value) || 'draft';
+            const lines = [];
+            lines.push('ТЕХНИЧЕСКОЕ ЗАДАНИЕ: ' + title);
+            lines.push('Статус: ' + (STATUS_LABELS[status] || status));
+            lines.push('Сформировано: ' + new Date().toLocaleString('ru-RU'));
+            lines.push('');
+            if (!nodes.length) {
+                lines.push('(На схеме пока нет объектов — добавьте справочник, документ и т.д.)');
+                return lines.join('\n');
+            }
+            syncEdgesFromRequisites();
+            const byId = Object.fromEntries(nodes.map(n => [n.id, n]));
+            lines.push('ОБЪЕКТЫ');
+            lines.push('═'.repeat(44));
+            nodes.forEach((n, idx) => {
+                lines.push('');
+                lines.push((idx + 1) + '. [' + (KIND_LABELS[n.kind] || n.kind) + '] «' + (n.name || '—') + '»');
+                lines.push('   id: ' + n.id);
+                const reqs = n.requisites || [];
+                if (reqs.length) {
+                    lines.push('   Реквизиты:');
+                    reqs.forEach(r => {
+                        if (r.type === 'ref' && r.refNodeId) {
+                            const tgt = byId[r.refNodeId];
+                            lines.push('   • ' + (r.name || '—') + ' → ссылка на «' + (tgt ? (tgt.name || tgt.id) : r.refNodeId) + '»' + (tgt ? ' [' + (KIND_LABELS[tgt.kind] || '') + ']' : ''));
+                        } else {
+                            lines.push('   • ' + (r.name || '—') + ' (' + (r.type || '') + ')');
+                        }
+                    });
+                } else {
+                    lines.push('   Реквизиты: нет');
+                }
+            });
+            if (edges.length) {
+                lines.push('');
+                lines.push('СВЯЗИ НА СХЕМЕ');
+                lines.push('─'.repeat(44));
+                edges.forEach(e => {
+                    const a = byId[e.from], b = byId[e.to];
+                    if (a && b) lines.push('• «' + (a.name || a.id) + '» —[' + (e.label || 'связь') + ']→ «' + (b.name || b.id) + '»');
+                });
+            }
+            return lines.join('\n');
+        }
+
+        function refreshSchemaTextNow() {
+            const el = document.getElementById('tz-schema-text');
+            if (el) el.textContent = buildAutoSchemaText();
+        }
+
+        function scheduleSchemaTextRefresh() {
+            if (schemaTextDebounce) clearTimeout(schemaTextDebounce);
+            schemaTextDebounce = setTimeout(() => {
+                schemaTextDebounce = null;
+                refreshSchemaTextNow();
+            }, 400);
+        }
+
+        (function bindToolbarSchemaRefresh() {
+            const t = document.getElementById('tz-title');
+            const s = document.getElementById('tz-status');
+            if (t) t.addEventListener('input', scheduleSchemaTextRefresh);
+            if (s) s.addEventListener('change', scheduleSchemaTextRefresh);
+        })();
 
         function uidShort() { return 'n' + Math.random().toString(36).slice(2, 9); }
 
@@ -225,6 +357,7 @@
                 status: 'draft',
                 nodes: [],
                 edges: [],
+                textModelManual: '',
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             });
@@ -234,9 +367,12 @@
             selectedId = null;
             document.getElementById('tz-title').value = 'Новое ТЗ';
             document.getElementById('tz-status').value = 'draft';
+            const tm = document.getElementById('tz-text-manual');
+            if (tm) tm.value = '';
             renderNodes();
             renderEdges();
             clearProps();
+            refreshSchemaTextNow();
         };
 
         function loadTz(id, data) {
@@ -245,12 +381,15 @@
             document.getElementById('tz-status').value = data.status || 'draft';
             nodes = Array.isArray(data.nodes) ? JSON.parse(JSON.stringify(data.nodes)) : [];
             edges = Array.isArray(data.edges) ? JSON.parse(JSON.stringify(data.edges)) : [];
+            const tm = document.getElementById('tz-text-manual');
+            if (tm) tm.value = typeof data.textModelManual === 'string' ? data.textModelManual : '';
             selectedId = null;
             renderNodes();
             renderEdges();
             clearProps();
             refreshListActive();
             requestAnimationFrame(() => renderEdges());
+            scheduleSchemaTextRefresh();
         }
 
         window.saveCurrentTz = async () => {
@@ -261,11 +400,13 @@
             const title = document.getElementById('tz-title').value.trim() || 'Без названия';
             const status = document.getElementById('tz-status').value;
             syncEdgesFromRequisites();
+            const textModelManual = document.getElementById('tz-text-manual')?.value ?? '';
             await updateDoc(doc(db, 'tzSpecs', currentId), {
                 title,
                 status,
                 nodes,
                 edges,
+                textModelManual,
                 updatedAt: new Date().toISOString()
             });
             alert('Сохранено');
@@ -332,6 +473,7 @@
                 div.onclick = (e) => { e.stopPropagation(); selectNode(n.id); };
                 layer.appendChild(div);
             });
+            scheduleSchemaTextRefresh();
         }
 
         function escapeHtml(s) {
