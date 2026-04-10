@@ -20,8 +20,15 @@
         @media (max-width: 900px) { .view-grid { grid-template-columns: 1fr; grid-template-rows: minmax(280px, 1fr) auto; } }
         .view-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; border-right: 1px solid var(--border-color); }
         @media (max-width: 900px) { .view-main { border-right: none; border-bottom: 1px solid var(--border-color); } }
-        .view-scroll { flex: 1; overflow: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
-        .canvas-wrap { position: relative; overflow: auto; min-height: 260px; max-height: min(45vh, 420px); background: repeating-linear-gradient(0deg, transparent, transparent 19px, var(--border-color) 20px), repeating-linear-gradient(90deg, transparent, transparent 19px, var(--border-color) 20px); background-size: 20px 20px; background-color: var(--bg-body); border-radius: 12px; border: 1px solid var(--border-color); }
+        .view-tabs { display: flex; gap: 4px; margin-top: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--border-color); }
+        .view-tab { cursor: pointer; padding: 10px 16px; font-size: 13px; font-weight: 600; font-family: inherit; border: none; border-radius: 10px 10px 0 0; background: transparent; color: var(--text-muted); margin-bottom: -1px; border-bottom: 2px solid transparent; }
+        .view-tab:hover { color: var(--text-main); background: rgba(99,102,241,0.06); }
+        .view-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(99,102,241,0.08); }
+        .view-tab-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+        .view-tab-panel.hidden { display: none !important; }
+        .view-scroll { flex: 1; overflow: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+        .view-scroll.schema-only { padding: 12px; }
+        .canvas-wrap { position: relative; overflow: auto; flex: 1; min-height: 320px; background: repeating-linear-gradient(0deg, transparent, transparent 19px, var(--border-color) 20px), repeating-linear-gradient(90deg, transparent, transparent 19px, var(--border-color) 20px); background-size: 20px 20px; background-color: var(--bg-body); border-radius: 12px; border: 1px solid var(--border-color); }
         .canvas-inner { position: relative; width: 2000px; height: 1200px; }
         .tz-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
         .tz-node { position: absolute; z-index: 2; min-width: 200px; max-width: 280px; width: max-content; background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 12px; padding: 8px; pointer-events: none; }
@@ -37,6 +44,12 @@
         .tz-node-reqs .req-type { color: var(--text-muted); }
         .block-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin: 0 0 6px; }
         .dump { margin: 0; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-card); font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Menlo, monospace; max-height: 200px; overflow-y: auto; }
+        .desc-split { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr); min-height: 0; gap: 0; border-top: 1px solid var(--border-color); }
+        @media (max-width: 800px) { .desc-split { grid-template-columns: 1fr; grid-template-rows: minmax(200px, 1fr) minmax(200px, 1fr); } }
+        .desc-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 12px; border-right: 1px solid var(--border-color); overflow: hidden; }
+        .desc-col:last-child { border-right: none; }
+        @media (max-width: 800px) { .desc-col { border-right: none; border-bottom: 1px solid var(--border-color); } .desc-col:last-child { border-bottom: none; } }
+        .dump-fill { flex: 1; min-height: 0; margin: 0; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-body); font-size: 13px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; font-family: 'Inter', ui-monospace, Menlo, monospace; overflow-y: auto; }
         .view-side { background: var(--bg-card); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
         .view-side-inner { padding: 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; overflow: hidden; }
         .view-side h2 { margin: 0; font-size: 15px; color: var(--text-heading); }
@@ -48,8 +61,8 @@
         .c-card .reply { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color); font-size: 12px; color: var(--primary); }
         input, textarea { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-heading); font-size: 13px; font-family: inherit; }
         textarea { min-height: 100px; resize: vertical; }
-        button { cursor: pointer; padding: 10px 14px; border-radius: 10px; border: none; font-weight: 600; font-size: 13px; background: var(--primary); color: #fff; }
-        button:hover { background: var(--primary-hover); }
+        button:not(.view-tab) { cursor: pointer; padding: 10px 14px; border-radius: 10px; border: none; font-weight: 600; font-size: 13px; background: var(--primary); color: #fff; }
+        button:not(.view-tab):hover { background: var(--primary-hover); }
         .err { padding: 40px 20px; text-align: center; color: var(--text-muted); }
         .hidden { display: none !important; }
     </style>
@@ -61,12 +74,16 @@
         <div class="view-top">
             <h1 id="pub-title">ТЗ</h1>
             <div class="meta" id="pub-meta"></div>
+            <div class="view-tabs" role="tablist">
+                <button type="button" class="view-tab active" role="tab" data-tab="schema" aria-selected="true">Графическая схема</button>
+                <button type="button" class="view-tab" role="tab" data-tab="desc" aria-selected="false">Описание</button>
+            </div>
         </div>
         <div class="view-grid">
             <div class="view-main">
-                <div class="view-scroll">
-                    <div>
-                        <p class="block-label">Схема (снимок на момент публикации)</p>
+                <div id="panel-schema" class="view-tab-panel">
+                    <div class="view-scroll schema-only">
+                        <p class="block-label">Снимок схемы на момент публикации</p>
                         <div class="canvas-wrap" id="canvas-wrap">
                             <div class="canvas-inner" id="canvas-inner">
                                 <svg class="tz-svg" id="tz-svg"></svg>
@@ -74,13 +91,17 @@
                             </div>
                         </div>
                     </div>
-                    <div>
-                        <p class="block-label">Текстовая модель</p>
-                        <pre id="pub-schema" class="dump"></pre>
-                    </div>
-                    <div>
-                        <p class="block-label">Текст автора ТЗ</p>
-                        <pre id="pub-manual" class="dump" style="max-height:160px;"></pre>
+                </div>
+                <div id="panel-desc" class="view-tab-panel hidden">
+                    <div class="desc-split">
+                        <div class="desc-col">
+                            <p class="block-label">Сформированное описание</p>
+                            <pre id="pub-schema-public" class="dump-fill"></pre>
+                        </div>
+                        <div class="desc-col">
+                            <p class="block-label">Текст автора ТЗ</p>
+                            <pre id="pub-manual-split" class="dump-fill"></pre>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -118,6 +139,9 @@
         const KIND_LABELS = { catalog: 'Справочник', document: 'Документ', register: 'Регистр', report: 'Отчёт', note: 'Примечание' };
         const STATUS_LABELS = { draft: 'Черновик', review: 'Согласование', sent: 'Отправлено', done: 'Выполнено' };
 
+        let publishedNodes = [];
+        let publishedEdges = [];
+
         const params = new URLSearchParams(location.search);
         const shareId = (params.get('s') || '').trim();
         if (!shareId || shareId.length < 16) {
@@ -132,6 +156,15 @@
             const d = document.createElement('div');
             d.textContent = s == null ? '' : String(s);
             return d.innerHTML;
+        }
+
+        /** Убирает служебные строки «id: …» из текстовой выгрузки для публичного просмотра */
+        function stripSchemaIdsForPublic(raw) {
+            if (raw == null || String(raw).trim() === '') return '(нет текста)';
+            const lines = String(raw).split('\n');
+            const out = lines.filter(line => !/^\s*id:\s*\S+/.test(line));
+            const t = out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+            return t || '(нет текста)';
         }
 
         function requisiteLine(n, r, byId) {
@@ -207,6 +240,8 @@
             const snap = pub.snapshot || {};
             const nodes = Array.isArray(snap.nodes) ? snap.nodes : [];
             const edges = Array.isArray(snap.edges) ? snap.edges : [];
+            publishedNodes = nodes;
+            publishedEdges = edges;
 
             document.getElementById('page-ok').classList.remove('hidden');
             document.getElementById('page-ok').style.display = 'flex';
@@ -215,8 +250,25 @@
             document.getElementById('pub-meta').textContent = 'Статус на момент публикации: ' + (STATUS_LABELS[snap.status] || snap.status || '—')
                 + ' · опубликовано ' + (pub.createdAt ? new Date(pub.createdAt).toLocaleString('ru-RU') : '');
 
-            document.getElementById('pub-schema').textContent = snap.schemaDump || '(нет текста)';
-            document.getElementById('pub-manual').textContent = snap.textModelManual || '(пусто)';
+            document.getElementById('pub-schema-public').textContent = stripSchemaIdsForPublic(snap.schemaDump);
+            document.getElementById('pub-manual-split').textContent = (snap.textModelManual && String(snap.textModelManual).trim())
+                ? snap.textModelManual
+                : '(пусто)';
+
+            document.querySelectorAll('.view-tab').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tab = btn.dataset.tab;
+                    document.querySelectorAll('.view-tab').forEach(b => {
+                        b.classList.toggle('active', b === btn);
+                        b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+                    });
+                    document.getElementById('panel-schema').classList.toggle('hidden', tab !== 'schema');
+                    document.getElementById('panel-desc').classList.toggle('hidden', tab !== 'desc');
+                    if (tab === 'schema') {
+                        requestAnimationFrame(() => renderEdges(publishedEdges, publishedNodes));
+                    }
+                });
+            });
 
             renderNodes(nodes);
             requestAnimationFrame(() => renderEdges(edges, nodes));
