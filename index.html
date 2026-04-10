@@ -101,10 +101,18 @@
         .status-visual .hammer { display: inline-block; font-size: 16px; }
         .task-card.status-wait { border-color: #8ad5ff !important; box-shadow: 0 0 0 1px rgba(138, 213, 255, 0.45), 0 0 12px rgba(138, 213, 255, 0.2); }
         .task-card.status-wait .status-visual { color: #bce9ff; }
-        .dashboard-workspace { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start; }
-        .task-side-panel { background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 16px; padding: 14px; position: sticky; top: 20px; }
+        .tasks-row { display: grid; grid-template-columns: 2.2fr 1.2fr; gap: 16px; align-items: start; margin-top: 20px; }
+        .task-side-panel { background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 16px; padding: 14px; position: sticky; top: 20px; min-width: 360px; }
         .task-side-empty { color: var(--text-muted); font-size: 13px; }
-        @media (max-width: 1100px) { .dashboard-workspace { grid-template-columns: 1fr; } .task-side-panel { position: static; } }
+        .task-side-panel.side-status-plan { border-color: var(--st-plan); }
+        .task-side-panel.side-status-todo { border-color: var(--st-todo); }
+        .task-side-panel.side-status-wait { border-color: var(--st-wait); box-shadow: 0 0 0 1px rgba(138, 213, 255, 0.4), 0 0 12px rgba(138, 213, 255, 0.2); }
+        .task-side-panel.side-status-done { border-color: var(--st-done); }
+        .task-side-panel.side-priority-high { box-shadow: 0 0 0 1px rgba(255, 122, 24, 0.45), 0 0 14px rgba(255, 122, 24, 0.25); }
+        .task-card.active-task { border-color: var(--primary) !important; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3); }
+        .field-label { display:block; font-size:11px; color:var(--text-muted); margin-bottom:6px; }
+        #task-modal .modal-content { max-width: 560px; }
+        @media (max-width: 1100px) { .tasks-row { grid-template-columns: 1fr; } .task-side-panel { position: static; min-width: 0; } }
 
         .stats-table { width: 100%; border-collapse: collapse; font-size: 12px; }
         .stats-table th, .stats-table td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color); }
@@ -186,8 +194,6 @@
 
         <!-- ВЬЮ: ДАШБОРД -->
         <div id="view-dashboard">
-            <div class="dashboard-workspace">
-            <div>
             <div class="creation-area">
                 <div class="spaces-tabs" id="spaces-tabs">
                     <div class="space-tab active" onclick="setSpace('personal')">Личные</div>
@@ -217,7 +223,8 @@
                 </div>
             </div>
 
-            <div class="tasks-board" style="margin-top:20px;">
+            <div class="tasks-row">
+            <div class="tasks-board">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <h3 style="margin:0;">Доска задач</h3>
                     <div style="display:flex; gap:8px;">
@@ -245,9 +252,8 @@
                 </div>
                 <div id="tasks-grid" class="tasks-grid"></div>
             </div>
-            </div>
             <div class="task-side-panel" id="task-side-panel">
-                <h3 style="margin-bottom:8px;">Карточка задачи</h3>
+                <h3 id="task-side-title" style="margin-bottom:8px;">Карточка задачи</h3>
                 <div id="task-side-empty" class="task-side-empty">Нажмите на задачу на доске, чтобы увидеть и редактировать поля.</div>
                 <div id="task-side-form" class="hidden">
                     <input id="side-title" type="text" placeholder="Название">
@@ -357,32 +363,35 @@
     <div id="task-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <h3 id="task-modal-title">Задача</h3>
+            <label class="field-label">Название задачи</label>
             <input type="text" id="modal-task-title" placeholder="Что сделать?">
+            <label class="field-label">Описание</label>
             <textarea id="modal-task-desc" rows="3" placeholder="Описание..."></textarea>
             <div style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                <label class="field-label">Эмодзи задачи</label>
                 <input type="text" id="modal-task-emoji" placeholder="Эмодзи задачи (напр. 🦫)" maxlength="2">
-                <select id="modal-task-emoji-preset" onchange="applyEmojiPreset(this.value)">
-                    <option value="">Животные эмодзи</option>
-                    <option value="🦫">🦫 Капибара</option>
-                    <option value="🦎">🦎 Геккон</option>
-                    <option value="🦊">🦊 Лиса</option>
-                    <option value="🐼">🐼 Панда</option>
-                    <option value="🐯">🐯 Тигр</option>
-                    <option value="🐨">🐨 Коала</option>
-                    <option value="🐧">🐧 Пингвин</option>
-                    <option value="🦉">🦉 Сова</option>
-                    <option value="🐳">🐳 Кит</option>
-                    <option value="🐙">🐙 Осьминог</option>
-                    <option value="🦄">🦄 Единорог</option>
-                    <option value="🐺">🐺 Волк</option>
-                </select>
+                </div>
+                <div style="flex:1;">
+                <label class="field-label">Тег задачи</label>
                 <input type="text" id="modal-task-tag" placeholder="Тег задачи">
+                </div>
+                <div style="flex:1;">
+                <label class="field-label">Важность</label>
                 <select id="modal-task-priority"><option value="low">Низкая</option><option value="medium">Средняя</option><option value="high">Высокая 🔥</option></select>
+                </div>
             </div>
             <div style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                <label class="field-label">Дедлайн</label>
                 <input type="date" id="modal-task-date" title="Дедлайн задачи">
+                </div>
+                <div style="flex:1;">
+                <label class="field-label">Статус задачи</label>
                 <select id="modal-task-status"><option value="plan">Plan</option><option value="todo">To Do</option><option value="wait">Wait</option><option value="done">Done</option></select>
+                </div>
             </div>
+            <label class="field-label">Дата фактического завершения (если Done)</label>
             <input type="date" id="modal-task-completed-date" title="Дата фактического завершения">
             <input type="hidden" id="modal-task-id">
             <input type="hidden" id="modal-source-note-id">
@@ -912,7 +921,8 @@
                     : t.status === 'wait'
                     ? `<div class="status-visual">WAIT</div>`
                     : `<div class="status-visual">${emoji}</div>`;
-                document.getElementById(`group-${g.key}`).innerHTML += `<div class="task-card status-${t.status} ${prior}" draggable="true" ondragstart="startDragTask(event,'${t.id}')" onclick="selectTask('${t.id}'); this.classList.toggle('expanded')">
+                const isActive = selectedTaskId === t.id ? 'active-task' : '';
+                document.getElementById(`group-${g.key}`).innerHTML += `<div class="task-card status-${t.status} ${prior} ${isActive}" data-task-id="${t.id}" draggable="true" ondragstart="startDragTask(event,'${t.id}')" onclick="selectTask('${t.id}'); this.classList.toggle('expanded')">
                     <div style="display:flex; justify-content:space-between;"><b>${t.title}</b><span class="status-chip ${t.status}">${(t.status || 'plan').toUpperCase()}</span></div>
                     ${statusVisual}
                     <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">#${t.tag} | 📅 ${t.dueDate || '-'}</div>
@@ -1021,8 +1031,18 @@
             selectedTaskId = id;
             const task = allItems.find(t => t.id === id);
             if(!task) return;
+            document.querySelectorAll('.task-card').forEach(el => el.classList.remove('active-task'));
+            const activeEl = document.querySelector(`.task-card[data-task-id="${id}"]`);
+            if(activeEl) activeEl.classList.add('active-task');
             document.getElementById('task-side-empty').classList.add('hidden');
             document.getElementById('task-side-form').classList.remove('hidden');
+            const side = document.getElementById('task-side-panel');
+            side.classList.remove('side-status-plan','side-status-todo','side-status-wait','side-status-done','side-priority-high');
+            side.classList.add(`side-status-${task.status || 'plan'}`);
+            if(task.priority === 'high') side.classList.add('side-priority-high');
+            const statusText = (task.status || 'plan').toUpperCase();
+            const important = task.priority === 'high' ? ' · Важно' : '';
+            document.getElementById('task-side-title').innerText = `Карточка задачи — ${statusText}${important}`;
             document.getElementById('side-title').value = task.title || '';
             document.getElementById('side-desc').value = task.description || '';
             document.getElementById('side-emoji').value = task.emoji || '';
