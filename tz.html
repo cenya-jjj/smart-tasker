@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Технические задания — Смарт Задачник</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #121212; --bg-card: #1e1e1e; --text-main: #e0e0e0; --text-heading: #fff;
+            --text-muted: #a1a1aa; --border-color: #2a2a2a; --input-bg: #2a2a2a; --input-border: #3f3f46;
+            --primary: #6366f1; --primary-hover: #4f46e5; --danger-text: #ef4444;
+        }
+        body.light-theme {
+            --bg-body: #f4f7f6; --bg-card: #fff; --text-main: #333; --text-heading: #111;
+            --text-muted: #6b7280; --border-color: #e5e7eb; --input-bg: #fff; --input-border: #d1d5db;
+            --primary: #4f46e5; --primary-hover: #4338ca; --danger-text: #dc2626;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
+        .top-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid var(--border-color); background: var(--bg-card); flex-wrap: wrap; gap: 10px; }
+        .top-bar h1 { margin: 0; font-size: 18px; color: var(--text-heading); }
+        .top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        a.back-link { color: var(--primary); text-decoration: none; font-weight: 600; font-size: 14px; }
+        button, .btn { cursor: pointer; padding: 8px 14px; border-radius: 10px; border: none; font-weight: 600; font-size: 13px; background: var(--primary); color: #fff; }
+        button:hover { background: var(--primary-hover); }
+        .btn-secondary { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
+        .layout { display: grid; grid-template-columns: 220px 1fr 300px; flex: 1; min-height: 0; }
+        @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
+        .sidebar { border-right: 1px solid var(--border-color); padding: 12px; overflow-y: auto; background: var(--bg-card); }
+        .sidebar h3 { font-size: 12px; color: var(--text-muted); margin: 0 0 8px; text-transform: uppercase; }
+        .tz-list-item { padding: 10px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 8px; cursor: pointer; font-size: 13px; }
+        .tz-list-item.active { border-color: var(--primary); background: rgba(99,102,241,0.08); }
+        .palette-item { padding: 8px 10px; margin-bottom: 6px; border-radius: 8px; border: 1px dashed var(--border-color); cursor: grab; font-size: 12px; user-select: none; }
+        .palette-item:active { cursor: grabbing; }
+        .main { position: relative; display: flex; flex-direction: column; min-height: 480px; }
+        .toolbar { padding: 8px 12px; border-bottom: 1px solid var(--border-color); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .toolbar input[type="text"] { flex: 1; min-width: 160px; max-width: 320px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-heading); }
+        .toolbar select { padding: 8px; border-radius: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-heading); }
+        .canvas-wrap { flex: 1; position: relative; overflow: auto; background: repeating-linear-gradient(0deg, transparent, transparent 19px, var(--border-color) 20px), repeating-linear-gradient(90deg, transparent, transparent 19px, var(--border-color) 20px); background-size: 20px 20px; background-color: var(--bg-body); min-height: 400px; }
+        .canvas-inner { position: relative; width: 2000px; height: 1400px; }
+        .tz-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        .tz-node { position: absolute; z-index: 2; width: 200px; min-height: 72px; background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 12px; padding: 8px; cursor: move; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .tz-node.selected { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99,102,241,0.35); }
+        .tz-node.kind-document { border-left: 4px solid #f59e0b; }
+        .tz-node.kind-catalog { border-left: 4px solid #3b82f6; }
+        .tz-node.kind-register { border-left: 4px solid #8b5cf6; }
+        .tz-node.kind-report { border-left: 4px solid #10b981; }
+        .tz-node.kind-note { border-left: 4px solid #64748b; }
+        .tz-node-title { font-weight: 800; font-size: 12px; color: var(--text-heading); margin-bottom: 4px; }
+        .tz-node-meta { font-size: 10px; color: var(--text-muted); }
+        .props { border-left: 1px solid var(--border-color); padding: 12px; overflow-y: auto; background: var(--bg-card); }
+        .props h3 { margin: 0 0 10px; font-size: 14px; color: var(--text-heading); }
+        label.small { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+        .props input, .props select { width: 100%; margin-bottom: 10px; padding: 8px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-heading); font-size: 13px; }
+        .req-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; align-items: end; margin-bottom: 8px; font-size: 11px; }
+        .hidden { display: none !important; }
+        .auth-gate { max-width: 420px; margin: 40px auto; padding: 30px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-color); text-align: center; }
+    </style>
+</head>
+<body>
+    <div id="auth-gate" class="auth-gate hidden">
+        <p style="color:var(--text-muted);">Войдите в Смарт Задачник, чтобы работать с ТЗ.</p>
+        <a href="index.html" class="back-link">Перейти ко входу</a>
+    </div>
+
+    <div id="app-root" class="hidden" style="display:flex; flex-direction:column; flex:1; min-height:100vh;">
+        <header class="top-bar">
+            <div style="display:flex; align-items:center; gap:16px;">
+                <a href="index.html" class="back-link">← К задачнику</a>
+                <h1>Технические задания</h1>
+            </div>
+            <div class="top-actions">
+                <button type="button" class="btn-secondary" onclick="document.body.classList.toggle('light-theme'); localStorage.setItem('theme', document.body.classList.contains('light-theme')?'light':'dark');">🌓</button>
+                <button type="button" onclick="saveCurrentTz()">Сохранить</button>
+            </div>
+        </header>
+        <div class="layout">
+            <aside class="sidebar">
+                <h3>Мои ТЗ</h3>
+                <button type="button" onclick="createNewTz()" style="width:100%; margin-bottom:12px;">+ Новое ТЗ</button>
+                <div id="tz-list"></div>
+                <h3 style="margin-top:16px;">Элементы (на канву)</h3>
+                <p style="font-size:11px; color:var(--text-muted); margin:0 0 8px;">Клик по типу — добавить в центр канвы</p>
+                <div class="palette-item" data-kind="catalog" onclick="addNode('catalog')">📁 Справочник</div>
+                <div class="palette-item" data-kind="document" onclick="addNode('document')">📄 Документ</div>
+                <div class="palette-item" data-kind="register" onclick="addNode('register')">📊 Регистр сведений</div>
+                <div class="palette-item" data-kind="report" onclick="addNode('report')">📈 Отчёт</div>
+                <div class="palette-item" data-kind="note" onclick="addNode('note')">💬 Примечание</div>
+            </aside>
+            <main class="main">
+                <div class="toolbar">
+                    <label class="small" style="margin:0;">Название ТЗ</label>
+                    <input type="text" id="tz-title" placeholder="Например: Документ приходная накладная">
+                    <label class="small" style="margin:0;">Статус</label>
+                    <select id="tz-status">
+                        <option value="draft">Черновик</option>
+                        <option value="review">Согласование</option>
+                        <option value="sent">Отправлено</option>
+                        <option value="done">Выполнено</option>
+                    </select>
+                </div>
+                <div class="canvas-wrap" id="canvas-wrap">
+                    <div class="canvas-inner" id="canvas-inner">
+                        <svg class="tz-svg" id="tz-svg"></svg>
+                        <div id="nodes-layer"></div>
+                    </div>
+                </div>
+            </main>
+            <aside class="props" id="props-panel">
+                <h3 id="props-heading">Объект не выбран</h3>
+                <div id="props-empty" style="font-size:13px; color:var(--text-muted);">Выберите узел на схеме</div>
+                <div id="props-form" class="hidden">
+                    <label class="small">Имя объекта</label>
+                    <input type="text" id="prop-name">
+                    <label class="small">Реквизиты шапки</label>
+                    <div id="requisites-list"></div>
+                    <button type="button" class="btn-secondary" style="width:100%;" onclick="addRequisite()">+ Реквизит</button>
+                    <p style="font-size:11px; color:var(--text-muted); margin-top:12px;">Тип «Ссылка» создаёт линию к другому объекту на схеме.</p>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { collection, addDoc, updateDoc, doc, query, where, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { initializeFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXGtaGi0uqnmEox06KNJKzaV7WD5pdyuY",
+            authDomain: "talkerj.firebaseapp.com",
+            projectId: "talkerj",
+            storageBucket: "talkerj.firebasestorage.app",
+            messagingSenderId: "602611717919",
+            appId: "1:602611717919:web:cbcb845e19f4eaa336022a"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = initializeFirestore(app, { experimentalForceLongPolling: true });
+
+        const KIND_LABELS = { catalog: 'Справочник', document: 'Документ', register: 'Регистр', report: 'Отчёт', note: 'Примечание' };
+        const PRIMITIVE_TYPES = ['string', 'number', 'date', 'boolean'];
+
+        let uid = null;
+        let currentId = null;
+        let nodes = [];
+        let edges = [];
+        let selectedId = null;
+        let dragState = null;
+        let listUnsub = null;
+        let tzBootstrapped = false;
+
+        if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-theme');
+
+        function uidShort() { return 'n' + Math.random().toString(36).slice(2, 9); }
+
+        function showApp() {
+            document.getElementById('auth-gate').classList.add('hidden');
+            document.getElementById('app-root').classList.remove('hidden');
+            document.getElementById('app-root').style.display = 'flex';
+        }
+        function showGate() {
+            document.getElementById('auth-gate').classList.remove('hidden');
+            document.getElementById('app-root').classList.add('hidden');
+        }
+
+        function refreshListActive() {
+            document.querySelectorAll('.tz-list-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.docId === currentId);
+            });
+        }
+
+        onAuthStateChanged(auth, async user => {
+            if (user && user.emailVerified) {
+                uid = user.uid;
+                showApp();
+                if (listUnsub) listUnsub();
+                listUnsub = onSnapshot(query(collection(db, 'tzSpecs'), where('userId', '==', uid)), snap => {
+                    const el = document.getElementById('tz-list');
+                    el.innerHTML = '';
+                    snap.forEach(d => {
+                        const data = d.data();
+                        const div = document.createElement('div');
+                        div.className = 'tz-list-item' + (d.id === currentId ? ' active' : '');
+                        div.dataset.docId = d.id;
+                        div.textContent = data.title || 'Без названия';
+                        div.onclick = () => loadTz(d.id, data);
+                        el.appendChild(div);
+                    });
+                    refreshListActive();
+                });
+                if (!tzBootstrapped) {
+                    tzBootstrapped = true;
+                    const q = await getDocs(query(collection(db, 'tzSpecs'), where('userId', '==', uid)));
+                    if (q.empty) await window.createNewTz();
+                    else loadTz(q.docs[0].id, q.docs[0].data());
+                }
+            } else {
+                uid = null;
+                currentId = null;
+                nodes = [];
+                edges = [];
+                selectedId = null;
+                tzBootstrapped = false;
+                if (listUnsub) { listUnsub(); listUnsub = null; }
+                showGate();
+            }
+        });
+
+        window.createNewTz = async () => {
+            if (!uid) return;
+            const ref = await addDoc(collection(db, 'tzSpecs'), {
+                userId: uid,
+                title: 'Новое ТЗ',
+                status: 'draft',
+                nodes: [],
+                edges: [],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            });
+            currentId = ref.id;
+            nodes = [];
+            edges = [];
+            selectedId = null;
+            document.getElementById('tz-title').value = 'Новое ТЗ';
+            document.getElementById('tz-status').value = 'draft';
+            renderNodes();
+            renderEdges();
+            clearProps();
+        };
+
+        function loadTz(id, data) {
+            currentId = id;
+            document.getElementById('tz-title').value = data.title || '';
+            document.getElementById('tz-status').value = data.status || 'draft';
+            nodes = Array.isArray(data.nodes) ? JSON.parse(JSON.stringify(data.nodes)) : [];
+            edges = Array.isArray(data.edges) ? JSON.parse(JSON.stringify(data.edges)) : [];
+            selectedId = null;
+            renderNodes();
+            renderEdges();
+            clearProps();
+            refreshListActive();
+        }
+
+        window.saveCurrentTz = async () => {
+            if (!uid || !currentId) {
+                alert('Создайте или выберите ТЗ');
+                return;
+            }
+            const title = document.getElementById('tz-title').value.trim() || 'Без названия';
+            const status = document.getElementById('tz-status').value;
+            syncEdgesFromRequisites();
+            await updateDoc(doc(db, 'tzSpecs', currentId), {
+                title,
+                status,
+                nodes,
+                edges,
+                updatedAt: new Date().toISOString()
+            });
+            alert('Сохранено');
+        };
+
+        function syncEdgesFromRequisites() {
+            const keep = edges.filter(e => e.manual);
+            const seen = new Set(keep.map(e => e.id));
+            nodes.forEach(n => {
+                (n.requisites || []).forEach((r, idx) => {
+                    if (r.type === 'ref' && r.refNodeId) {
+                        const eid = `e_${n.id}_${idx}`;
+                        if (!seen.has(eid)) {
+                            keep.push({ id: eid, from: n.id, to: r.refNodeId, label: r.name || 'ссылка', manual: false });
+                            seen.add(eid);
+                        }
+                    }
+                });
+            });
+            edges = keep;
+        }
+
+        window.addNode = (kind) => {
+            if (!currentId) {
+                alert('Сначала создайте ТЗ кнопкой «Новое ТЗ»');
+                return;
+            }
+            const id = uidShort();
+            nodes.push({
+                id,
+                kind,
+                name: KIND_LABELS[kind] || kind,
+                x: 400 + Math.random() * 120,
+                y: 280 + Math.random() * 120,
+                requisites: []
+            });
+            renderNodes();
+            renderEdges();
+            selectNode(id);
+        };
+
+        function renderNodes() {
+            const layer = document.getElementById('nodes-layer');
+            layer.innerHTML = '';
+            nodes.forEach(n => {
+                const div = document.createElement('div');
+                div.className = 'tz-node kind-' + n.kind + (selectedId === n.id ? ' selected' : '');
+                div.style.left = n.x + 'px';
+                div.style.top = n.y + 'px';
+                div.dataset.id = n.id;
+                div.innerHTML = `<div class="tz-node-title">${escapeHtml(n.name)}</div><div class="tz-node-meta">${KIND_LABELS[n.kind] || n.kind}</div>`;
+                div.onmousedown = (e) => startDrag(e, n.id);
+                div.onclick = (e) => { e.stopPropagation(); selectNode(n.id); };
+                layer.appendChild(div);
+            });
+        }
+
+        function escapeHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        function startDrag(e, id) {
+            if (e.button !== 0) return;
+            dragState = { id, startX: e.clientX, startY: e.clientY, ox: nodes.find(n => n.id === id).x, oy: nodes.find(n => n.id === id).y };
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', endDrag);
+        }
+        function onDrag(e) {
+            if (!dragState) return;
+            const n = nodes.find(x => x.id === dragState.id);
+            if (!n) return;
+            n.x = dragState.ox + (e.clientX - dragState.startX);
+            n.y = dragState.oy + (e.clientY - dragState.startY);
+            const el = document.querySelector(`.tz-node[data-id="${dragState.id}"]`);
+            if (el) { el.style.left = n.x + 'px'; el.style.top = n.y + 'px'; }
+            renderEdges();
+        }
+        function endDrag() {
+            dragState = null;
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', endDrag);
+        }
+
+        document.getElementById('canvas-wrap').onclick = (e) => {
+            if (e.target.closest('.tz-node')) return;
+            selectedId = null;
+            document.querySelectorAll('.tz-node').forEach(el => el.classList.remove('selected'));
+            clearProps();
+        };
+
+        function renderEdges() {
+            syncEdgesFromRequisites();
+            const svg = document.getElementById('tz-svg');
+            const inner = document.getElementById('canvas-inner');
+            svg.setAttribute('viewBox', '0 0 2000 1400');
+            let html = '';
+            edges.forEach(e => {
+                const a = nodes.find(n => n.id === e.from);
+                const b = nodes.find(n => n.id === e.to);
+                if (!a || !b) return;
+                const x1 = a.x + 100, y1 = a.y + 70;
+                const x2 = b.x + 100, y2 = b.y;
+                const mx = (x1 + x2) / 2;
+                html += `<path d="M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}" fill="none" stroke="rgba(99,102,241,0.7)" stroke-width="2"/>`;
+                html += `<text x="${mx}" y="${(y1+y2)/2}" fill="#a1a1aa" font-size="10" text-anchor="middle">${escapeHtml(e.label || '')}</text>`;
+            });
+            svg.innerHTML = html;
+        }
+
+        function selectNode(id) {
+            selectedId = id;
+            document.querySelectorAll('.tz-node').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
+            const n = nodes.find(x => x.id === id);
+            if (!n) return;
+            document.getElementById('props-heading').textContent = KIND_LABELS[n.kind] + ': свойства';
+            document.getElementById('props-empty').classList.add('hidden');
+            document.getElementById('props-form').classList.remove('hidden');
+            document.getElementById('prop-name').value = n.name;
+            document.getElementById('prop-name').oninput = () => { n.name = document.getElementById('prop-name').value; renderNodes(); };
+            renderRequisitesEditor(n);
+        }
+
+        function clearProps() {
+            document.getElementById('props-heading').textContent = 'Объект не выбран';
+            document.getElementById('props-empty').classList.remove('hidden');
+            document.getElementById('props-form').classList.add('hidden');
+        }
+
+        function renderRequisitesEditor(n) {
+            const list = document.getElementById('requisites-list');
+            list.innerHTML = '';
+            if (!n.requisites) n.requisites = [];
+            n.requisites.forEach((r, i) => {
+                const row = document.createElement('div');
+                row.className = 'req-row';
+                const inp = document.createElement('input');
+                inp.type = 'text';
+                inp.placeholder = 'Имя';
+                inp.className = 'rq-name';
+                inp.value = r.name || '';
+                inp.oninput = () => { n.requisites[i].name = inp.value; renderEdges(); };
+                const selType = document.createElement('select');
+                selType.className = 'rq-type';
+                PRIMITIVE_TYPES.forEach(t => {
+                    const o = document.createElement('option');
+                    o.value = t;
+                    o.textContent = t;
+                    if (r.type === t) o.selected = true;
+                    selType.appendChild(o);
+                });
+                const oRef = document.createElement('option');
+                oRef.value = 'ref';
+                oRef.textContent = 'Ссылка';
+                if (r.type === 'ref') oRef.selected = true;
+                selType.appendChild(oRef);
+                selType.onchange = () => {
+                    n.requisites[i].type = selType.value;
+                    n.requisites[i].refNodeId = selType.value === 'ref' ? (n.requisites[i].refNodeId || '') : '';
+                    selectNode(n.id);
+                };
+                const del = document.createElement('button');
+                del.type = 'button';
+                del.className = 'btn-secondary';
+                del.style.padding = '6px';
+                del.textContent = '✕';
+                del.onclick = () => { n.requisites.splice(i, 1); selectNode(n.id); renderEdges(); };
+                row.appendChild(inp);
+                row.appendChild(selType);
+                row.appendChild(del);
+                list.appendChild(row);
+                if (r.type === 'ref') {
+                    const refWrap = document.createElement('div');
+                    refWrap.style.gridColumn = '1 / -1';
+                    const refSel = document.createElement('select');
+                    refSel.className = 'rq-ref';
+                    refSel.style.width = '100%';
+                    refSel.style.marginBottom = '8px';
+                    const blank = document.createElement('option');
+                    blank.value = '';
+                    blank.textContent = '— объект —';
+                    refSel.appendChild(blank);
+                    nodes.filter(o => o.id !== n.id).forEach(o => {
+                        const oopt = document.createElement('option');
+                        oopt.value = o.id;
+                        oopt.textContent = o.name || o.id;
+                        if (r.refNodeId === o.id) oopt.selected = true;
+                        refSel.appendChild(oopt);
+                    });
+                    refSel.value = r.refNodeId || '';
+                    refSel.onchange = () => { n.requisites[i].refNodeId = refSel.value; renderEdges(); };
+                    refWrap.appendChild(refSel);
+                    list.appendChild(refWrap);
+                }
+            });
+        }
+
+        window.addRequisite = () => {
+            const n = nodes.find(x => x.id === selectedId);
+            if (!n) return;
+            if (!n.requisites) n.requisites = [];
+            n.requisites.push({ name: 'Реквизит', type: 'string', refNodeId: '' });
+            selectNode(n.id);
+            renderEdges();
+        };
+    </script>
+</body>
+</html>
