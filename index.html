@@ -79,11 +79,6 @@
         .priority-high {
             border-color: #ff7a18 !important;
             box-shadow: 0 0 0 1px rgba(255, 122, 24, 0.5), 0 0 14px rgba(255, 122, 24, 0.3), 0 0 22px rgba(255, 122, 24, 0.22);
-            animation: urgentPulse 1.5s ease-in-out infinite alternate;
-        }
-        @keyframes urgentPulse {
-            from { box-shadow: 0 0 0 1px rgba(255, 122, 24, 0.35), 0 0 12px rgba(255, 122, 24, 0.2), 0 0 24px rgba(255, 50, 50, 0.12); }
-            to { box-shadow: 0 0 0 1px rgba(255, 122, 24, 0.55), 0 0 24px rgba(255, 122, 24, 0.42), 0 0 40px rgba(255, 50, 50, 0.28); }
         }
         .status-plan { border-left: 3px solid var(--st-plan); }
         .status-todo { border-left: 3px solid var(--st-todo); }
@@ -102,8 +97,8 @@
         .task-card:active { cursor: grabbing; }
         .task-group.drag-over { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
         .status-visual { margin-top: 6px; min-height: 18px; display: flex; align-items: center; gap: 8px; }
-        .status-visual .gear { display: inline-block; font-size: 17px; animation: spinGear 2s linear infinite; }
-        .status-visual .hammer { display: inline-block; font-size: 16px; transform-origin: 70% 80%; animation: hammerHit 0.9s ease-in-out infinite; }
+        .status-visual .gear { display: inline-block; font-size: 17px; }
+        .status-visual .hammer { display: inline-block; font-size: 16px; }
         .task-card.status-wait .status-visual { color: #a5d8ff; text-shadow: 0 0 6px rgba(165, 216, 255, 0.7); }
         .task-card.status-wait::after {
             content: "";
@@ -113,12 +108,6 @@
             border-radius: 12px;
             background: linear-gradient(135deg, rgba(173, 216, 255, 0.2), rgba(200, 235, 255, 0.08));
             box-shadow: inset 0 0 0 1px rgba(173, 216, 255, 0.38), inset 0 0 16px rgba(173, 216, 255, 0.22);
-        }
-        @keyframes spinGear { from { transform: rotate(0); } to { transform: rotate(360deg); } }
-        @keyframes hammerHit {
-            0%, 100% { transform: rotate(-8deg) translateY(0); }
-            40% { transform: rotate(26deg) translateY(1px); }
-            60% { transform: rotate(-3deg) translateY(0); }
         }
 
         .stats-table { width: 100%; border-collapse: collapse; font-size: 12px; }
