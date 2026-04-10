@@ -1,5 +1,6 @@
-// Фрагмент для ДОБАВЛЕНИЯ в существующие правила Firebase (не заменяйте весь файл правил).
-// После вставки задеплойте: firebase deploy --only firestore:rules
+// УСТАРЕЛО как единственный источник: в репозитории есть полный файл firestore.rules
+// (users, teams, tasks, tzSpecs, tzShares). Скопируйте его целиком в консоль Firebase.
+// Этот файл оставлен только для справки по блоку tzShares.
 
     match /tzShares/{shareId} {
       allow get: if true;

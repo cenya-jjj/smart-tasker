@@ -613,14 +613,20 @@
                 await setPersistence(auth, rem ? browserLocalPersistence : browserSessionPersistence);
                 await signInWithEmailAndPassword(auth, e, p);
                 if(!auth.currentUser.emailVerified) { showToast("Внимание", "Подтвердите почту!"); await signOut(auth); }
-            } catch (err) { showToast("Ошибка", "Ошибка входа. Проверьте данные."); }
+            } catch (err) {
+                console.error(err);
+                const msg = err && err.code === 'auth/invalid-credential' ? 'Неверный email или пароль.'
+                    : err && err.message ? err.message
+                    : 'Ошибка входа. Проверьте данные.';
+                showToast("Ошибка", msg);
+            }
         };
         window.handleLogout = () => signOut(auth);
         window.leakDataPrank = () => showConfirm("Слив данных", "Все ваши задачи уйдут в базу 1С. Продолжить?", async () => { handleLogout(); setTimeout(()=>alert("Не ну ты серьезно? Это ж шутка!"), 500); });
 
         window.switchView = (id) => {
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            const activeBtn = document.querySelector(`.nav-link[onclick*="switchView('${id}')"]`);
+            document.querySelectorAll('.main-nav button.nav-link').forEach(l => l.classList.remove('active'));
+            const activeBtn = document.querySelector(`.main-nav button.nav-link[onclick*="switchView('${id}')"]`);
             if(activeBtn) activeBtn.classList.add('active');
             ['dashboard','stats','teams','help'].forEach(v => document.getElementById('view-'+v).classList.add('hidden'));
             document.getElementById('view-'+id).classList.remove('hidden');
@@ -643,10 +649,16 @@
 
         onAuthStateChanged(auth, async user => {
             if(user && user.emailVerified) {
-                const ensuredNick = await ensureNickWithTag(user);
                 document.getElementById('auth-wrapper').classList.add('hidden');
                 document.getElementById('dashboard-wrapper').classList.remove('hidden');
-                renderUserIdentity(ensuredNick);
+                try {
+                    const ensuredNick = await ensureNickWithTag(user);
+                    renderUserIdentity(ensuredNick);
+                } catch (e) {
+                    console.error(e);
+                    showToast("База данных", "Не удалось сохранить профиль. Проверьте правила Firestore (файл firestore.rules в репозитории).");
+                    renderUserIdentity(user.displayName || user.email || 'Пользователь');
+                }
                 setupUserFlashListener(user.uid);
                 fetchTeams(user.uid);
             } else {
