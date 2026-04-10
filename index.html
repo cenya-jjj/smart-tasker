@@ -101,8 +101,9 @@
         .status-visual .hammer { display: inline-block; font-size: 16px; }
         .task-card.status-wait { border-color: #8ad5ff !important; box-shadow: 0 0 0 1px rgba(138, 213, 255, 0.45), 0 0 12px rgba(138, 213, 255, 0.2); }
         .task-card.status-wait .status-visual { color: #bce9ff; }
-        .tasks-row { display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(360px, 1fr); gap: 18px; align-items: start; margin-top: 22px; }
-        .task-side-panel { background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 16px; padding: 14px; position: sticky; top: 20px; min-width: 360px; }
+        .tasks-shell { margin-top: 22px; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 16px; padding: 12px; }
+        .tasks-row { display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(360px, 1fr); gap: 14px; align-items: stretch; }
+        .task-side-panel { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 14px; min-width: 360px; height: 100%; box-sizing: border-box; }
         .task-side-empty { color: var(--text-muted); font-size: 13px; }
         .task-side-panel.side-status-plan { border-color: var(--st-plan); }
         .task-side-panel.side-status-todo { border-color: var(--st-todo); }
@@ -121,7 +122,7 @@
             .dashboard-container { padding: 18px; }
             .middle-grid { grid-template-columns: 1fr; gap: 14px; }
             .tasks-row { grid-template-columns: 1fr; gap: 14px; }
-            .task-side-panel { position: static; min-width: 0; }
+            .task-side-panel { min-width: 0; }
             .task-list { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
         }
         @media (max-width: 760px) {
@@ -245,6 +246,7 @@
                 </div>
             </div>
 
+            <div class="tasks-shell">
             <div class="tasks-row">
             <div class="tasks-board">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap: 10px;">
@@ -293,7 +295,12 @@
                     <label style="font-size:11px; color:var(--text-muted);">Дата завершения</label>
                     <input id="side-completed" type="date">
                     <button onclick="saveTaskFromSidePanel()">Сохранить изменения</button>
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="completeSelectedTask()" style="background:#16a34a;">Выполнить</button>
+                        <button class="btn-danger" onclick="deleteSelectedTask()">Удалить</button>
+                    </div>
                 </div>
+            </div>
             </div>
             </div>
         </div>
@@ -951,7 +958,6 @@
                     ${doneMeta}
                     <div class="task-details" onclick="event.stopPropagation()">
                         <p style="font-size:12px;">${t.description || '...'}</p>
-                        <div style="display:flex; gap:8px;"><button class="btn-icon" onclick="changeStatus(event,'${t.id}','done')">✓</button><button class="btn-icon" onclick="openTaskModal('${t.id}')">✏️</button><button class="btn-icon" style="color:red;" onclick="deleteDocItem('${t.id}')">✕</button></div>
                     </div>
                 </div>`;
             }));
@@ -1090,6 +1096,28 @@
                 updatedAt: new Date().toISOString()
             });
             showToast("Карточка", "Изменения сохранены");
+        };
+        window.completeSelectedTask = async () => {
+            if(!selectedTaskId) return showToast("Карточка", "Сначала выберите задачу");
+            const today = new Date().toLocaleDateString('en-CA');
+            showPrompt("Дата завершения", "YYYY-MM-DD", today, async (doneDate) => {
+                await updateDoc(doc(db,"tasks",selectedTaskId), { status: 'done', completedAt: `${doneDate}T12:00:00.000Z`, updatedAt: new Date().toISOString() });
+                showToast("Статус", "Задача выполнена");
+            });
+        };
+        window.deleteSelectedTask = async () => {
+            if(!selectedTaskId) return showToast("Карточка", "Сначала выберите задачу");
+            const id = selectedTaskId;
+            showConfirm("Удалить задачу?", "Это действие нельзя отменить.", async () => {
+                await deleteDoc(doc(db,"tasks",id));
+                selectedTaskId = null;
+                document.getElementById('task-side-title').innerText = "Карточка задачи";
+                document.getElementById('task-side-empty').classList.remove('hidden');
+                document.getElementById('task-side-form').classList.add('hidden');
+                const side = document.getElementById('task-side-panel');
+                side.classList.remove('side-status-plan','side-status-todo','side-status-wait','side-status-done','side-priority-high');
+                showToast("Удаление", "Задача удалена");
+            });
         };
 
         window.saveProfile = async () => {
