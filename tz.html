@@ -17,30 +17,34 @@
             --primary: #4f46e5; --primary-hover: #4338ca; --danger-text: #dc2626;
         }
         * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
-        .top-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid var(--border-color); background: var(--bg-card); flex-wrap: wrap; gap: 10px; }
+        html, body { height: 100%; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); margin: 0; min-height: 100%; display: flex; flex-direction: column; overflow-x: hidden; }
+        #app-root { flex: 1; display: flex; flex-direction: column; min-height: 0; height: 100vh; height: 100dvh; max-height: 100dvh; overflow: hidden; }
+        .top-bar { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid var(--border-color); background: var(--bg-card); flex-wrap: wrap; gap: 10px; width: 100%; }
         .top-bar h1 { margin: 0; font-size: 18px; color: var(--text-heading); }
         .top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         a.back-link { color: var(--primary); text-decoration: none; font-weight: 600; font-size: 14px; }
         button, .btn { cursor: pointer; padding: 8px 14px; border-radius: 10px; border: none; font-weight: 600; font-size: 13px; background: var(--primary); color: #fff; }
         button:hover { background: var(--primary-hover); }
         .btn-secondary { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
-        .layout { display: grid; grid-template-columns: 220px 1fr 300px; flex: 1; min-height: 0; }
-        @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
-        .sidebar { border-right: 1px solid var(--border-color); padding: 12px; overflow-y: auto; background: var(--bg-card); }
+        /* minmax(0,1fr) — иначе широкая канва раздвигает сетку и уносит правую колонку за экран */
+        .layout { display: grid; grid-template-columns: 220px minmax(0, 1fr) 280px; flex: 1; min-height: 0; width: 100%; overflow: hidden; }
+        @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; grid-template-rows: auto minmax(200px, 1fr) auto; overflow: auto; } }
+        .sidebar { border-right: 1px solid var(--border-color); padding: 12px; overflow-x: hidden; overflow-y: auto; background: var(--bg-card); width: 220px; min-width: 220px; max-width: 220px; }
+        @media (max-width: 1000px) { .sidebar { width: 100%; max-width: none; min-width: 0; border-right: none; border-bottom: 1px solid var(--border-color); } }
         .sidebar h3 { font-size: 12px; color: var(--text-muted); margin: 0 0 8px; text-transform: uppercase; }
         .tz-list-item { padding: 10px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 8px; cursor: pointer; font-size: 13px; }
         .tz-list-item.active { border-color: var(--primary); background: rgba(99,102,241,0.08); }
         .palette-item { padding: 8px 10px; margin-bottom: 6px; border-radius: 8px; border: 1px dashed var(--border-color); cursor: grab; font-size: 12px; user-select: none; }
         .palette-item:active { cursor: grabbing; }
-        .main { position: relative; display: flex; flex-direction: column; min-height: 480px; }
-        .toolbar { padding: 8px 12px; border-bottom: 1px solid var(--border-color); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .main { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; flex: 1; overflow: hidden; }
+        .toolbar { flex-shrink: 0; padding: 8px 12px; border-bottom: 1px solid var(--border-color); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         .toolbar input[type="text"] { flex: 1; min-width: 160px; max-width: 320px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-heading); }
         .toolbar select { padding: 8px; border-radius: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-heading); }
-        .canvas-wrap { flex: 1; position: relative; overflow: auto; background: repeating-linear-gradient(0deg, transparent, transparent 19px, var(--border-color) 20px), repeating-linear-gradient(90deg, transparent, transparent 19px, var(--border-color) 20px); background-size: 20px 20px; background-color: var(--bg-body); min-height: 400px; }
+        .canvas-wrap { flex: 1; min-height: 0; position: relative; overflow: auto; -webkit-overflow-scrolling: touch; background: repeating-linear-gradient(0deg, transparent, transparent 19px, var(--border-color) 20px), repeating-linear-gradient(90deg, transparent, transparent 19px, var(--border-color) 20px); background-size: 20px 20px; background-color: var(--bg-body); }
         .canvas-inner { position: relative; width: 2000px; height: 1400px; }
         .tz-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
-        .tz-node { position: absolute; z-index: 2; width: 200px; min-height: 72px; background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 12px; padding: 8px; cursor: move; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .tz-node { position: absolute; z-index: 2; min-width: 200px; width: max-content; max-width: 280px; background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 12px; padding: 8px; cursor: move; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .tz-node.selected { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99,102,241,0.35); }
         .tz-node.kind-document { border-left: 4px solid #f59e0b; }
         .tz-node.kind-catalog { border-left: 4px solid #3b82f6; }
@@ -48,8 +52,12 @@
         .tz-node.kind-report { border-left: 4px solid #10b981; }
         .tz-node.kind-note { border-left: 4px solid #64748b; }
         .tz-node-title { font-weight: 800; font-size: 12px; color: var(--text-heading); margin-bottom: 4px; }
-        .tz-node-meta { font-size: 10px; color: var(--text-muted); }
-        .props { border-left: 1px solid var(--border-color); padding: 12px; overflow-y: auto; background: var(--bg-card); }
+        .tz-node-meta { font-size: 10px; color: var(--text-muted); margin-bottom: 6px; }
+        .tz-node-reqs { margin: 0; padding: 6px 0 0; border-top: 1px solid var(--border-color); list-style: none; font-size: 10px; color: var(--text-main); line-height: 1.35; }
+        .tz-node-reqs li { padding: 2px 0; word-break: break-word; }
+        .tz-node-reqs .req-type { color: var(--text-muted); }
+        .props { border-left: 1px solid var(--border-color); padding: 12px; overflow-x: hidden; overflow-y: auto; background: var(--bg-card); width: 280px; min-width: 280px; max-width: 280px; flex-shrink: 0; }
+        @media (max-width: 1000px) { .props { width: 100%; max-width: none; min-width: 0; border-left: none; border-top: 1px solid var(--border-color); max-height: 40vh; } }
         .props h3 { margin: 0 0 10px; font-size: 14px; color: var(--text-heading); }
         label.small { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
         .props input, .props select { width: 100%; margin-bottom: 10px; padding: 8px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-heading); font-size: 13px; }
@@ -64,7 +72,7 @@
         <a href="index.html" class="back-link">Перейти ко входу</a>
     </div>
 
-    <div id="app-root" class="hidden" style="display:flex; flex-direction:column; flex:1; min-height:100vh;">
+    <div id="app-root" class="hidden">
         <header class="top-bar">
             <div style="display:flex; align-items:center; gap:16px;">
                 <a href="index.html" class="back-link">← К задачнику</a>
@@ -242,6 +250,7 @@
             renderEdges();
             clearProps();
             refreshListActive();
+            requestAnimationFrame(() => renderEdges());
         }
 
         window.saveCurrentTz = async () => {
@@ -307,7 +316,18 @@
                 div.style.left = n.x + 'px';
                 div.style.top = n.y + 'px';
                 div.dataset.id = n.id;
-                div.innerHTML = `<div class="tz-node-title">${escapeHtml(n.name)}</div><div class="tz-node-meta">${KIND_LABELS[n.kind] || n.kind}</div>`;
+                const reqs = n.requisites || [];
+                const maxShow = 10;
+                let reqBlock = '';
+                if (reqs.length) {
+                    const slice = reqs.slice(0, maxShow);
+                    reqBlock = '<ul class="tz-node-reqs">' + slice.map(r => '<li>' + requisiteSummaryHtml(r) + '</li>').join('');
+                    if (reqs.length > maxShow) {
+                        reqBlock += '<li class="req-type">+' + (reqs.length - maxShow) + ' ещё</li>';
+                    }
+                    reqBlock += '</ul>';
+                }
+                div.innerHTML = '<div class="tz-node-title">' + escapeHtml(n.name) + '</div><div class="tz-node-meta">' + escapeHtml(KIND_LABELS[n.kind] || n.kind) + '</div>' + reqBlock;
                 div.onmousedown = (e) => startDrag(e, n.id);
                 div.onclick = (e) => { e.stopPropagation(); selectNode(n.id); };
                 layer.appendChild(div);
@@ -318,6 +338,31 @@
             const d = document.createElement('div');
             d.textContent = s;
             return d.innerHTML;
+        }
+
+        function refTargetName(refNodeId) {
+            const o = nodes.find(x => x.id === refNodeId);
+            return o ? (o.name || o.id) : '…';
+        }
+
+        function requisiteSummaryHtml(r) {
+            const name = escapeHtml(r.name || '—');
+            if (r.type === 'ref') {
+                return name + ' <span class="req-type">→ ' + escapeHtml(refTargetName(r.refNodeId)) + '</span>';
+            }
+            return name + ' <span class="req-type">(' + escapeHtml(r.type || '') + ')</span>';
+        }
+
+        function nodeAnchorBottom(n) {
+            const el = document.querySelector(`.tz-node[data-id="${n.id}"]`);
+            const w = el && el.offsetWidth ? el.offsetWidth : 200;
+            const h = el && el.offsetHeight ? el.offsetHeight : 72;
+            return { x: n.x + w / 2, y: n.y + h };
+        }
+        function nodeAnchorTop(n) {
+            const el = document.querySelector(`.tz-node[data-id="${n.id}"]`);
+            const w = el && el.offsetWidth ? el.offsetWidth : 200;
+            return { x: n.x + w / 2, y: n.y };
         }
 
         function startDrag(e, id) {
@@ -334,12 +379,13 @@
             n.y = dragState.oy + (e.clientY - dragState.startY);
             const el = document.querySelector(`.tz-node[data-id="${dragState.id}"]`);
             if (el) { el.style.left = n.x + 'px'; el.style.top = n.y + 'px'; }
-            renderEdges();
+            requestAnimationFrame(() => renderEdges());
         }
         function endDrag() {
             dragState = null;
             document.removeEventListener('mousemove', onDrag);
             document.removeEventListener('mouseup', endDrag);
+            requestAnimationFrame(() => renderEdges());
         }
 
         document.getElementById('canvas-wrap').onclick = (e) => {
@@ -352,15 +398,15 @@
         function renderEdges() {
             syncEdgesFromRequisites();
             const svg = document.getElementById('tz-svg');
-            const inner = document.getElementById('canvas-inner');
             svg.setAttribute('viewBox', '0 0 2000 1400');
             let html = '';
             edges.forEach(e => {
                 const a = nodes.find(n => n.id === e.from);
                 const b = nodes.find(n => n.id === e.to);
                 if (!a || !b) return;
-                const x1 = a.x + 100, y1 = a.y + 70;
-                const x2 = b.x + 100, y2 = b.y;
+                const p1 = nodeAnchorBottom(a);
+                const p2 = nodeAnchorTop(b);
+                const x1 = p1.x, y1 = p1.y, x2 = p2.x, y2 = p2.y;
                 const mx = (x1 + x2) / 2;
                 html += `<path d="M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}" fill="none" stroke="rgba(99,102,241,0.7)" stroke-width="2"/>`;
                 html += `<text x="${mx}" y="${(y1+y2)/2}" fill="#a1a1aa" font-size="10" text-anchor="middle">${escapeHtml(e.label || '')}</text>`;
@@ -370,15 +416,16 @@
 
         function selectNode(id) {
             selectedId = id;
-            document.querySelectorAll('.tz-node').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
+            renderNodes();
             const n = nodes.find(x => x.id === id);
             if (!n) return;
             document.getElementById('props-heading').textContent = KIND_LABELS[n.kind] + ': свойства';
             document.getElementById('props-empty').classList.add('hidden');
             document.getElementById('props-form').classList.remove('hidden');
             document.getElementById('prop-name').value = n.name;
-            document.getElementById('prop-name').oninput = () => { n.name = document.getElementById('prop-name').value; renderNodes(); };
+            document.getElementById('prop-name').oninput = () => { n.name = document.getElementById('prop-name').value; renderNodes(); renderEdges(); };
             renderRequisitesEditor(n);
+            requestAnimationFrame(() => renderEdges());
         }
 
         function clearProps() {
@@ -399,7 +446,7 @@
                 inp.placeholder = 'Имя';
                 inp.className = 'rq-name';
                 inp.value = r.name || '';
-                inp.oninput = () => { n.requisites[i].name = inp.value; renderEdges(); };
+                inp.oninput = () => { n.requisites[i].name = inp.value; renderNodes(); renderEdges(); };
                 const selType = document.createElement('select');
                 selType.className = 'rq-type';
                 PRIMITIVE_TYPES.forEach(t => {
@@ -448,7 +495,7 @@
                         refSel.appendChild(oopt);
                     });
                     refSel.value = r.refNodeId || '';
-                    refSel.onchange = () => { n.requisites[i].refNodeId = refSel.value; renderEdges(); };
+                    refSel.onchange = () => { n.requisites[i].refNodeId = refSel.value; renderNodes(); renderEdges(); };
                     refWrap.appendChild(refSel);
                     list.appendChild(refWrap);
                 }
