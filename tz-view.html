@@ -58,6 +58,10 @@
         .tz-node.kind-register { border-left: 4px solid #8b5cf6; }
         .tz-node.kind-report { border-left: 4px solid #10b981; }
         .tz-node.kind-note { border-left: 4px solid #64748b; }
+        .tz-node.kind-processing { border-left: 4px solid #06b6d4; }
+        .tz-node.kind-tsd { border-left: 4px solid #ec4899; }
+        .tz-node.kind-operators { border-left: 4px solid #a855f7; }
+        .tz-node.kind-messenger { border-left: 4px solid #22c55e; }
         .tz-node-title { font-weight: 800; font-size: 12px; color: var(--text-heading); margin-bottom: 4px; }
         .tz-node-meta { font-size: 10px; color: var(--text-muted); margin-bottom: 6px; }
         .tz-node-reqs { margin: 0; padding: 6px 0 0; border-top: 1px solid var(--border-color); list-style: none; font-size: 10px; line-height: 1.35; }
@@ -163,7 +167,14 @@
         const app = initializeApp(firebaseConfig);
         const db = initializeFirestore(app, { experimentalForceLongPolling: true });
 
-        const KIND_LABELS = { catalog: 'Справочник', document: 'Документ', register: 'Регистр', report: 'Отчёт', note: 'Примечание' };
+        const KIND_LABELS = {
+            catalog: 'Справочник', document: 'Документ', register: 'Регистр', report: 'Отчёт', note: 'Примечание',
+            processing: 'Обработка', tsd: 'ТСД', operators: 'Логика и операторы', messenger: 'Мессенджер'
+        };
+
+        function supportsTabularParts(kind) {
+            return kind === 'document' || kind === 'catalog' || kind === 'processing';
+        }
         const STATUS_LABELS = { draft: 'Черновик', review: 'Согласование', sent: 'Отправлено', done: 'Выполнено' };
 
         let publishedNodes = [];
@@ -214,10 +225,13 @@
                 div.style.left = (n.x || 0) + 'px';
                 div.style.top = (n.y || 0) + 'px';
                 const reqs = n.requisites || [];
-                let reqBlock = '';
-                if (reqs.length) {
-                    reqBlock = '<ul class="tz-node-reqs">' + reqs.map(r => requisiteLine(n, r, byId)).join('') + '</ul>';
+                const tps = supportsTabularParts(n.kind) ? (n.tabularParts || []) : [];
+                const lines = reqs.map(r => requisiteLine(n, r, byId));
+                if (tps.length) {
+                    const names = tps.map(tp => escapeHtml(tp.name || '—')).join(', ');
+                    lines.push('<li class="req-type">Табличные части: ' + names + '</li>');
                 }
+                const reqBlock = lines.length ? '<ul class="tz-node-reqs">' + lines.join('') + '</ul>' : '';
                 div.innerHTML = '<div class="tz-node-title">' + escapeHtml(n.name) + '</div><div class="tz-node-meta">' + escapeHtml(KIND_LABELS[n.kind] || n.kind) + '</div>' + reqBlock;
                 layer.appendChild(div);
             });

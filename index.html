@@ -91,17 +91,17 @@
             padding: 0 16px;
         }
         .panel-frame-auth {
-            background: var(--panel-grad);
-            border: 1px solid var(--frame-border);
-            border-radius: 10px;
-            padding: 2px;
-            box-shadow: var(--panel-glow);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0;
+            box-shadow: none;
         }
         .auth-card-inner {
-            background: var(--bg-card);
-            border-radius: 8px;
+            background: transparent;
+            border-radius: 12px;
             padding: 36px 28px 32px;
-            border: 1px solid var(--border-color);
+            border: none;
         }
         .auth-subtitle { margin: 0 0 20px; color: var(--text-muted); font-size: 14px; line-height: 1.5; }
 
@@ -134,15 +134,11 @@
         }
         .header-vrule {
             width: 1px;
-            height: 22px;
-            background: linear-gradient(180deg, transparent, var(--cyber-cyan), transparent);
-            opacity: 0.35;
+            height: 20px;
+            background: var(--border-color);
             flex-shrink: 0;
         }
-        body.light-theme .header-vrule {
-            background: linear-gradient(180deg, transparent, var(--primary), transparent);
-            opacity: 0.4;
-        }
+        body.light-theme .header-vrule { background: var(--border-color); }
         .header-brand {
             font-size: 11px;
             font-weight: 800;
@@ -286,21 +282,21 @@
         }
 
         .panel-frame {
-            background: var(--panel-grad);
-            border: 1px solid var(--frame-border);
-            border-radius: 10px;
-            padding: 2px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0;
             display: flex;
             flex-direction: column;
             min-height: 0;
             min-width: 0;
-            box-shadow: var(--panel-glow);
+            box-shadow: none;
         }
         .panel-inner {
-            background: var(--bg-card);
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            padding: 16px;
+            background: transparent;
+            border-radius: 12px;
+            border: none;
+            padding: 14px 16px;
             flex: 1;
             min-height: 0;
             display: flex;
@@ -311,8 +307,9 @@
         #cal-body-root { flex: 1; min-height: 0; display: flex; flex-direction: column; }
         .panel-inner--board { padding-bottom: 18px; display: flex; flex-direction: column; min-height: 0; }
         .panel-inner--side {
-            border-top: 2px solid var(--border-color);
-            border-radius: 8px 8px 8px 8px;
+            border-top: 1px solid var(--border-color);
+            border-radius: 0 0 12px 12px;
+            padding-top: 12px;
         }
 
         .dash-top-split {
@@ -367,13 +364,8 @@
         .app-hr {
             height: 1px;
             border: none;
-            margin: 6px 0 4px;
-            background: linear-gradient(90deg, transparent, var(--cyber-cyan), var(--cyber-magenta), transparent);
-            opacity: 0.35;
-        }
-        body.light-theme .app-hr {
-            background: linear-gradient(90deg, transparent, var(--primary), transparent);
-            opacity: 0.45;
+            margin: 8px 0 6px;
+            background: var(--border-color);
         }
 
         .cal-toolbar { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 8px; flex-shrink: 0; }
