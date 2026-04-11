@@ -29,8 +29,8 @@
             --cyber-cyan: #22d3ee;
             --cyber-magenta: #e879f9;
             --frame-border: rgba(34, 211, 238, 0.22);
-            --panel-glow: 0 0 0 1px rgba(34, 211, 238, 0.06);
-            --panel-grad: linear-gradient(135deg, rgba(34, 211, 238, 0.05), rgba(232, 121, 249, 0.03));
+            --panel-glow: 0 0 0 1px rgba(34, 211, 238, 0.04);
+            --panel-grad: linear-gradient(135deg, rgba(34, 211, 238, 0.025), rgba(232, 121, 249, 0.02));
         }
 
         body.light-theme {
@@ -52,21 +52,21 @@
             --cyber-cyan: #0891b2;
             --cyber-magenta: #a21caf;
             --frame-border: rgba(79, 70, 229, 0.28);
-            --panel-glow: 0 0 0 1px rgba(79, 70, 229, 0.06);
-            --panel-grad: linear-gradient(135deg, rgba(79, 70, 229, 0.06), rgba(124, 58, 237, 0.04));
+            --panel-glow: 0 0 0 1px rgba(79, 70, 229, 0.05);
+            --panel-grad: linear-gradient(135deg, rgba(79, 70, 229, 0.04), rgba(124, 58, 237, 0.03));
         }
 
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-body);
-            background-image: radial-gradient(ellipse 100% 70% at 50% -18%, rgba(34, 211, 238, 0.045), transparent 55%);
+            background-image: radial-gradient(ellipse 100% 70% at 50% -18%, rgba(34, 211, 238, 0.028), transparent 55%);
             color: var(--text-main);
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding: 12px;
             box-sizing: border-box;
             transition: background-color 0.3s, color 0.3s;
             -webkit-font-smoothing: antialiased;
@@ -108,11 +108,11 @@
         .dashboard-container {
             width: 100%;
             max-width: 1280px;
-            padding: 20px 24px 28px;
+            padding: 14px 18px 20px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            min-height: 90vh;
+            gap: 12px;
+            min-height: 0;
             box-sizing: border-box;
         }
 
@@ -142,6 +142,22 @@
         body.light-theme .header-vrule {
             background: linear-gradient(180deg, transparent, var(--primary), transparent);
             opacity: 0.4;
+        }
+        .header-brand {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.22em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+        .header-vrule--dim { opacity: 0.25; }
+        .nav-tz-link {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
         }
         .header-user-cluster {
             display: flex;
@@ -292,7 +308,8 @@
         }
         .panel-inner--notes { min-height: 280px; }
         .panel-inner--cal { min-height: 320px; }
-        .panel-inner--board { padding-bottom: 18px; }
+        #cal-body-root { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+        .panel-inner--board { padding-bottom: 18px; display: flex; flex-direction: column; min-height: 0; }
         .panel-inner--side {
             border-top: 2px solid var(--border-color);
             border-radius: 8px 8px 8px 8px;
@@ -359,7 +376,21 @@
             opacity: 0.45;
         }
 
+        .cal-toolbar { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 8px; flex-shrink: 0; }
+        .cal-view-select { width: auto; margin: 0; padding: 6px 10px; font-size: 12px; border-radius: 8px; }
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-shrink: 0; }
+        .cal-week-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; flex: 1; min-height: 0; align-content: stretch; }
+        .cal-week-day { background: var(--day-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px; min-height: 0; display: flex; flex-direction: column; gap: 4px; cursor: pointer; min-width: 0; }
+        .cal-week-day.today { border-color: var(--danger-text); }
+        .cal-week-day.cal-filtered { border-color: var(--primary); box-shadow: inset 0 0 0 1px rgba(129, 140, 248, 0.3); }
+        .cal-week-day-head { font-size: 10px; font-weight: 800; color: var(--text-muted); display: flex; justify-content: space-between; gap: 4px; }
+        .cal-week-day-list { flex: 1; overflow-y: auto; min-height: 80px; display: flex; flex-direction: column; gap: 3px; }
+        .cal-day-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 8px; }
+        .cal-day-panel-head { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; gap: 8px; flex-wrap: wrap; }
+        .cal-day-panel-title { margin: 0; font-size: 14px; font-weight: 800; }
+        .cal-day-task-list { flex: 1; overflow-y: auto; min-height: 120px; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; background: var(--day-bg); }
+        .cal-day-list-item { font-size: 12px; padding: 6px 8px; border-radius: 6px; border-left: 2px solid var(--primary); background: rgba(129, 140, 248, 0.08); margin-bottom: 6px; cursor: pointer; }
+        .cal-day-list-item:last-child { margin-bottom: 0; }
         .cal-month-title { margin: 0; font-size: 15px; font-weight: 700; }
         .cal-dow {
             display: grid;
@@ -421,18 +452,54 @@
         .cal-day .btn-icon { margin-top: auto; align-self: flex-start; flex-shrink: 0; }
 
         .note-item {
-            background: var(--bg-body); padding: 10px; margin-bottom: 10px; border-radius: 10px; font-size: 13px;
+            background: var(--bg-body); padding: 8px 10px; margin-bottom: 8px; border-radius: 8px; font-size: 12px;
             display: flex; justify-content: space-between; border: 1px solid var(--border-color);
         }
         .btn-icon { background: none; border: none; padding: 3px; color: var(--text-muted); cursor: pointer; font-size: 14px; width: auto; margin: 0; }
 
         .tasks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 12px; }
-        .task-card {
-            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px;
-            cursor: pointer; transition: 0.2s;
+        .tasks-columns-wrap {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            margin-top: 8px;
+            min-height: 0;
+            max-height: min(42vh, calc(100vh - 420px));
+            flex: 1;
         }
-        .task-card.expanded .task-details { display: block; }
-        .task-details { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); }
+        .task-col {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-body);
+            min-height: 180px;
+            max-height: 100%;
+        }
+        .task-col-head {
+            flex-shrink: 0;
+            padding: 6px 8px;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
+        }
+        .task-col-scroll { flex: 1; overflow-y: auto; padding: 6px; min-height: 0; }
+        .task-card {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 10px;
+            cursor: grab; transition: 0.2s;
+        }
+        .task-card .task-details { display: block; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-color); font-size: 11px; color: var(--text-muted); line-height: 1.35; max-height: 3.2em; overflow: hidden; }
+        .task-card-title-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+        .task-avatar-mark { font-size: 15px; line-height: 1; flex-shrink: 0; }
+        .task-title-sep { width: 1px; height: 14px; background: var(--border-color); opacity: 0.65; flex-shrink: 0; }
         .priority-high {
             border-color: #ff7a18 !important;
             box-shadow: 0 0 0 1px rgba(255, 122, 24, 0.28), 0 0 10px rgba(255, 122, 24, 0.12);
@@ -448,34 +515,24 @@
         .status-chip.done { color: var(--st-done); }
 
         .task-groups { display: flex; flex-direction: column; gap: 12px; }
-        .task-group {
-            width: 100%;
-            background: var(--bg-body);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 10px;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .task-group.col-plan { box-shadow: inset 0 2px 0 0 var(--st-plan); }
-        .task-group.col-todo { box-shadow: inset 0 2px 0 0 var(--st-todo); }
-        .task-group.col-wait { box-shadow: inset 0 2px 0 0 var(--st-wait); }
-        .task-group.col-done { box-shadow: inset 0 2px 0 0 var(--st-done); }
+        .task-group { width: 100%; }
+        .task-col.col-plan .task-col-head { color: var(--st-plan); box-shadow: inset 0 -2px 0 0 var(--st-plan); }
+        .task-col.col-todo .task-col-head { color: var(--st-todo); box-shadow: inset 0 -2px 0 0 var(--st-todo); }
+        .task-col.col-wait .task-col-head { color: var(--st-wait); box-shadow: inset 0 -2px 0 0 var(--st-wait); }
+        .task-col.col-done .task-col-head { color: var(--st-done); box-shadow: inset 0 -2px 0 0 var(--st-done); }
+        .task-col.drag-over { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.12); }
         .task-group-title { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 8px; }
-        .task-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; min-height: 24px; }
-        .task-card { cursor: grab; }
+        .task-list { display: flex; flex-direction: column; gap: 6px; min-height: 24px; }
         .task-card-title {
             overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; text-align: left;
         }
         .task-card:active { cursor: grabbing; }
         .task-group.drag-over { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.15); }
-        .status-visual { margin-top: 6px; min-height: 18px; display: flex; align-items: center; gap: 8px; }
-        .status-visual .gear { display: inline-block; font-size: 17px; }
-        .status-visual .hammer { display: inline-block; font-size: 16px; }
+        .status-visual { display: none; }
         .task-card.status-wait {
             border-color: #8ad5ff !important;
             box-shadow: 0 0 0 1px rgba(138, 213, 255, 0.22);
         }
-        .task-card.status-wait .status-visual { color: #7dd3fc; }
 
         .tasks-shell { margin-top: 8px; background: transparent; border: none; padding: 0; }
         .tasks-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr); gap: 14px; align-items: stretch; }
@@ -488,6 +545,8 @@
         .board-filters-panel.hidden { display: none !important; }
         .board-filters-panel input, .board-filters-panel select { margin-bottom: 0 !important; width: auto; font-size: 12px; padding: 6px 10px; }
         .board-filters-panel .btn-secondary { margin-bottom: 0; }
+        #tasks-grid { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+        #tasks-grid.tasks-grid-table-fill { display: block; }
         .board-filter-done {
             display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; white-space: nowrap;
             color: var(--text-muted);
@@ -541,6 +600,29 @@
             #task-modal .modal-content { max-width: 94vw; padding: 16px; }
         }
 
+        .tasks-table-grouped { margin-top: 8px; }
+        .tg-date { font-weight: 800; font-size: 11px; color: var(--text-heading); margin: 10px 0 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border-color); }
+        .tg-date:first-child { margin-top: 0; }
+        .tg-status-sep { font-size: 9px; font-weight: 800; letter-spacing: 0.05em; margin: 8px 0 4px; text-transform: uppercase; padding: 2px 0 2px 8px; border-left: 3px solid var(--border-color); color: var(--text-muted); }
+        .tg-status-sep.st-plan { border-left-color: var(--st-plan); color: var(--st-plan); }
+        .tg-status-sep.st-todo { border-left-color: var(--st-todo); color: var(--st-todo); }
+        .tg-status-sep.st-wait { border-left-color: var(--st-wait); color: var(--st-wait); }
+        .tg-status-sep.st-done { border-left-color: var(--st-done); color: var(--st-done); }
+        .tg-task-row { cursor: pointer; transition: background 0.15s; }
+        .tg-task-row:hover { background: rgba(129, 140, 248, 0.06); }
+        .tg-task-row.active-task { background: rgba(129, 140, 248, 0.12); }
+        .tg-task-row.row-prio-high { box-shadow: inset 3px 0 0 #ff7a18; }
+        .tg-date-row td, .tg-sep-row td { border-bottom: none !important; padding-top: 4px; padding-bottom: 4px; }
+        .tg-sep-row td { padding-top: 0; }
+        .tg-av { font-size: 14px; width: 1.6em; text-align: center; }
+        .avatar-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        .avatar-choice { font-size: 20px; width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--input-bg); cursor: pointer; padding: 0; margin: 0; display: inline-flex; align-items: center; justify-content: center; transition: 0.15s; }
+        .avatar-choice:hover { border-color: var(--primary); }
+        .avatar-choice.selected { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.25); }
+        .stat-status-filters { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-bottom: 12px; font-size: 12px; color: var(--text-muted); }
+        .stat-status-filters label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+        .stat-status-filters input { width: auto; margin: 0; }
+
         .stats-table { width: 100%; border-collapse: collapse; font-size: 12px; }
         .stats-table th, .stats-table td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color); }
         .stats-summary { display: flex; gap: 15px; margin-bottom: 20px; }
@@ -556,12 +638,6 @@
             border: 1px solid var(--border-color);
             box-shadow: var(--panel-glow);
         }
-
-        .footer-area { margin-top: 30px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-bottom: 30px; }
-        .footer-signature { font-size: 15px; font-weight: 800; letter-spacing: 3px; color: var(--sign-color); }
-        .easter-egg-text { font-size: 11px; color: var(--text-muted); filter: blur(0.6px); cursor: default; user-select: none; transition: filter 0.3s; }
-        .easter-egg-text:hover { filter: blur(0); }
-        .prank-btn { background: none; border: 1px solid var(--border-color); color: var(--text-muted); font-size: 10px; padding: 4px 8px; border-radius: 6px; cursor: pointer; width: auto; margin: 0; }
 
         .toast {
             position: fixed; top: 20px; right: 20px; background: var(--primary); color: white;
@@ -622,9 +698,11 @@
                 <button class="nav-link" onclick="switchView('stats')">Статистика</button>
                 <button class="nav-link" onclick="switchView('teams')">Команды</button>
                 <button class="nav-link" onclick="switchView('help')">Справка</button>
-                <a href="tz.html" class="nav-link nav-link-a" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">Технические задания<span id="nav-tz-badge" class="nav-tz-alarm hidden" title="Есть неучтённые отзывы по опубликованным ТЗ">!</span></a>
+                <a href="./tz.html" class="nav-link nav-link-a nav-tz-link">Технические задания<span id="nav-tz-badge" class="nav-tz-alarm hidden" title="Есть неучтённые отзывы по опубликованным ТЗ">!</span></a>
             </nav>
             <div class="header-vrule" aria-hidden="true"></div>
+            <span class="header-brand" aria-label="Автор">BY CENYA</span>
+            <div class="header-vrule header-vrule--dim" aria-hidden="true"></div>
             <div class="header-user-cluster">
                 <div class="profile-btn" onclick="openProfileModal()" title="Профиль">
                     <span id="user-name-display" title="Ваш ник для приглашений"></span>
@@ -658,15 +736,22 @@
                 </div>
                 <div class="panel-frame dash-cal-frame">
                     <div class="panel-inner panel-inner--cal">
-                        <div class="cal-header">
-                            <button class="btn-secondary btn-cal-nav" type="button" onclick="changeMonth(-1)">&lt;</button>
-                            <h4 id="cal-month-year" class="cal-month-title"></h4>
-                            <button class="btn-secondary btn-cal-nav" type="button" onclick="changeMonth(1)">&gt;</button>
+                        <div class="cal-toolbar">
+                            <select id="cal-view-mode" class="cal-view-select" title="Масштаб календаря" onchange="onCalViewModeChange()">
+                                <option value="day">День</option>
+                                <option value="week">Неделя</option>
+                                <option value="month" selected>Месяц</option>
+                            </select>
                         </div>
-                        <div class="cal-dow">
+                        <div class="cal-header">
+                            <button class="btn-secondary btn-cal-nav" type="button" onclick="calNav(-1)">&lt;</button>
+                            <h4 id="cal-month-year" class="cal-month-title"></h4>
+                            <button class="btn-secondary btn-cal-nav" type="button" onclick="calNav(1)">&gt;</button>
+                        </div>
+                        <div id="cal-dow-row" class="cal-dow">
                             <span>ПН</span><span>ВТ</span><span>СР</span><span>ЧТ</span><span>ПТ</span><span>СБ</span><span>ВС</span>
                         </div>
-                        <div id="cal-days-grid" class="cal-days"></div>
+                        <div id="cal-body-root"></div>
                     </div>
                 </div>
             </div>
@@ -693,8 +778,8 @@
                                     <option value="newest">Сначала новые</option>
                                 </select>
                                 <select id="tasks-view-mode" onchange="renderTasks()">
+                                    <option value="table" selected>Таблица</option>
                                     <option value="board">Доска</option>
-                                    <option value="table">Таблица</option>
                                 </select>
                                 <button type="button" class="btn-secondary" onclick="document.getElementById('filter-date').value=''; renderTasks(); renderCalendar();">Сброс</button>
                                 <label class="board-filter-done"><input type="checkbox" id="setting-show-done" onchange="renderTasks()"> Show Done</label>
@@ -709,10 +794,9 @@
                             <div id="task-side-form" class="hidden">
                                 <input id="side-title" type="text" placeholder="Название">
                                 <textarea id="side-desc" rows="4" placeholder="Описание"></textarea>
-                                <div class="side-row-2">
-                                    <input id="side-emoji" type="text" placeholder="Эмодзи" maxlength="2">
-                                    <input id="side-tag" type="text" placeholder="Тег">
-                                </div>
+                                <label class="field-label" for="side-assignee">Исполнитель (аватар)</label>
+                                <select id="side-assignee"></select>
+                                <input id="side-tag" type="text" placeholder="Тег">
                                 <div class="side-row-2">
                                     <select id="side-priority"><option value="low">Низкая</option><option value="medium">Средняя</option><option value="high">Высокая</option></select>
                                     <select id="side-status"><option value="plan">Plan</option><option value="todo">To Do</option><option value="wait">Wait</option><option value="done">Done</option></select>
@@ -736,11 +820,18 @@
         <!-- ВЬЮ: СТАТИСТИКА -->
         <div id="view-stats" class="hidden">
             <h3>Продвинутая статистика</h3>
-            <div style="display:flex; gap:12px; margin-bottom:20px; align-items:flex-end;">
-                <div style="flex:1;"><label style="font-size:11px;">Пространство</label><select id="stat-space-select" style="margin:0;"></select></div>
-                <div style="flex:1;"><label style="font-size:11px;">От</label><input type="date" id="stat-from" style="margin:0;"></div>
-                <div style="flex:1;"><label style="font-size:11px;">До</label><input type="date" id="stat-to" style="margin:0;"></div>
+            <div style="display:flex; gap:12px; margin-bottom:12px; align-items:flex-end; flex-wrap:wrap;">
+                <div style="flex:1; min-width:140px;"><label style="font-size:11px;">Пространство</label><select id="stat-space-select" style="margin:0;"></select></div>
+                <div style="flex:1; min-width:140px;"><label style="font-size:11px;">От</label><input type="date" id="stat-from" style="margin:0;"></div>
+                <div style="flex:1; min-width:140px;"><label style="font-size:11px;">До</label><input type="date" id="stat-to" style="margin:0;"></div>
                 <button onclick="renderAdvancedStats()" style="width:auto; margin:0; padding:12px 20px;">Построить отчет</button>
+            </div>
+            <div class="stat-status-filters" id="stat-status-filters">
+                <span style="font-weight:600; color:var(--text-heading);">Статусы в отчёте:</span>
+                <label><input type="checkbox" class="stat-st-cb" value="plan" checked> Plan</label>
+                <label><input type="checkbox" class="stat-st-cb" value="todo" checked> To Do</label>
+                <label><input type="checkbox" class="stat-st-cb" value="wait" checked> Wait</label>
+                <label><input type="checkbox" class="stat-st-cb" value="done" checked> Done</label>
             </div>
             <div id="stats-content" class="hidden">
                 <div class="stats-summary" id="stats-summary"></div>
@@ -823,12 +914,6 @@
         </div>
     </div>
 
-    <div class="footer-area">
-        <div class="footer-signature">BY CENYA</div>
-        <div class="easter-egg-text">1С Моя жизни</div>
-        <button class="prank-btn" onclick="leakDataPrank()">Слить все данные</button>
-    </div>
-
     <!-- МОДАЛКИ -->
     <div id="task-modal" class="modal-overlay hidden">
         <div class="modal-content">
@@ -837,18 +922,16 @@
             <input type="text" id="modal-task-title" placeholder="Что сделать?">
             <label class="field-label">Описание</label>
             <textarea id="modal-task-desc" rows="3" placeholder="Описание..."></textarea>
+            <label class="field-label" for="modal-task-assignee">Кто ведёт задачу (аватар на доске)</label>
+            <select id="modal-task-assignee"></select>
             <div style="display:flex; gap:10px;">
-                <div style="flex:1;">
-                <label class="field-label">Эмодзи задачи</label>
-                <input type="text" id="modal-task-emoji" placeholder="Эмодзи задачи (напр. 🦫)" maxlength="2">
-                </div>
                 <div style="flex:1;">
                 <label class="field-label">Тег задачи</label>
                 <input type="text" id="modal-task-tag" placeholder="Тег задачи">
                 </div>
                 <div style="flex:1;">
                 <label class="field-label">Важность</label>
-                <select id="modal-task-priority"><option value="low">Низкая</option><option value="medium">Средняя</option><option value="high">Высокая 🔥</option></select>
+                <select id="modal-task-priority"><option value="low">Низкая</option><option value="medium">Средняя</option><option value="high">Высокая</option></select>
                 </div>
             </div>
             <div style="display:flex; gap:10px;">
@@ -889,8 +972,10 @@
     <div id="profile-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <h3>Профиль</h3>
-            <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">Измените ваше имя (Тег не изменится)</p>
+            <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">Имя (тег не меняется) и аватар в списке задач</p>
             <input type="text" id="edit-username" placeholder="Имя">
+            <label class="field-label" style="margin-top:12px;">Аватар в задачах</label>
+            <div id="profile-avatar-grid" class="avatar-grid"></div>
             <div id="flash-controls" class="hidden" style="display:flex; flex-direction:column; gap:8px; margin-top:4px;">
                 <label style="font-size:12px; color:var(--text-muted);">Флешка для участника (только лидер)</label>
                 <select id="flash-team-select" onchange="onFlashTeamChange()">
@@ -929,12 +1014,94 @@
         const db = initializeFirestore(app, { experimentalForceLongPolling: true });
 
         let allItems = []; let myTeams = []; let currentDate = new Date(); let currentSpace = 'personal'; let unsubTasks = []; let unsubUserDoc = null; let selectedTaskId = null;
+        const AVATAR_PRESETS = ['🐱','🐶','🦊','🐻','🐼','🦁','🐯','🐮','🐷','🐸','🐵','🦉','🐧','🦫','🦔','🐝'];
+        const TEAM_TASK_AVATAR = '👥';
+        let myTaskAvatar = '🦫';
+        let teamMemberMeta = {};
         let tzSpecsFeedbackUnsub = null;
         const indexTzPendingByToken = new Map();
         let tzCommentFeedbackUnsubs = [];
         let flashMembersByTeam = {};
         const tagPattern = /^[A-Z0-9]{6}$/;
         const escapeHtml = (s) => { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; };
+        const taskAvatarGlyph = (t) => {
+            if(!t) return myTaskAvatar || '📋';
+            const g = (t.taskAvatar != null && String(t.taskAvatar).trim() !== '') ? String(t.taskAvatar).trim() : (t.emoji != null && String(t.emoji).trim() !== '') ? String(t.emoji).trim() : '';
+            return g || myTaskAvatar || '📋';
+        };
+        async function ensureTeamMemberMeta(teamId) {
+            if(teamId === 'personal') return;
+            const team = myTeams.find(x => x.id === teamId);
+            if(!team?.members) return;
+            for(const uid of team.members) {
+                if(teamMemberMeta[uid]) continue;
+                try {
+                    const u = await getDoc(doc(db, 'users', uid));
+                    const d = u.data() || {};
+                    teamMemberMeta[uid] = { displayName: d.displayName || 'Участник', taskAvatar: (d.taskAvatar || '🙂').toString().trim() || '🙂' };
+                } catch(_) {
+                    teamMemberMeta[uid] = { displayName: 'Участник', taskAvatar: '🙂' };
+                }
+            }
+        }
+        function assigneeSelectValue(task) {
+            if(!task || task.itemType !== 'task') return 'self';
+            if(task.assigneeKind === 'team') return 'team';
+            if(task.assigneeKind === 'member' && task.assigneeUid) return 'm:' + task.assigneeUid;
+            return 'self';
+        }
+        function fillAssigneeSelect(sel, task, forEdit) {
+            if(!sel) return;
+            sel.innerHTML = '';
+            const addOpt = (v, lab) => { const o = document.createElement('option'); o.value = v; o.textContent = lab; sel.appendChild(o); };
+            addOpt('self', `Я (${taskAvatarGlyph({ taskAvatar: myTaskAvatar })})`);
+            if(currentSpace !== 'personal') {
+                addOpt('team', 'Команда ' + TEAM_TASK_AVATAR);
+                const team = myTeams.find(t => t.id === currentSpace);
+                (team?.members || []).forEach(uid => {
+                    if(uid === auth.currentUser.uid) return;
+                    const m = teamMemberMeta[uid];
+                    const av = m?.taskAvatar || '🙂';
+                    const name = (m?.displayName || 'Участник').split('#')[0];
+                    addOpt('m:' + uid, `${av} ${name}`);
+                });
+            }
+            if(forEdit && task && task.itemType === 'task') {
+                const want = assigneeSelectValue(task);
+                sel.value = [...sel.options].some(o => o.value === want) ? want : 'self';
+            } else sel.value = 'self';
+        }
+        function resolveAssigneeFromSelect(val) {
+            if(val === 'team') return { taskAvatar: TEAM_TASK_AVATAR, assigneeKind: 'team', assigneeUid: null, emoji: '' };
+            if(typeof val === 'string' && val.startsWith('m:')) {
+                const uid = val.slice(2);
+                const m = teamMemberMeta[uid];
+                return { taskAvatar: (m?.taskAvatar || '🙂').trim(), assigneeKind: 'member', assigneeUid: uid, emoji: '' };
+            }
+            return { taskAvatar: (myTaskAvatar || '🦫').trim(), assigneeKind: 'self', assigneeUid: auth.currentUser?.uid || null, emoji: '' };
+        }
+        function buildProfileAvatarGrid() {
+            const grid = document.getElementById('profile-avatar-grid');
+            if(!grid || grid.dataset.built === '1') return;
+            grid.dataset.built = '1';
+            grid.innerHTML = AVATAR_PRESETS.map(em => `<button type="button" class="avatar-choice" data-emoji="${em}" onclick="pickProfileAvatar(this)">${em}</button>`).join('');
+        }
+        window.pickProfileAvatar = (btn) => {
+            document.querySelectorAll('#profile-avatar-grid .avatar-choice').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        };
+        function calWeekMonday(d) {
+            const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            const wd = x.getDay();
+            const diff = wd === 0 ? -6 : 1 - wd;
+            x.setDate(x.getDate() + diff);
+            return x;
+        }
+        function calAddDays(d, n) {
+            const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            x.setDate(x.getDate() + n);
+            return x;
+        }
         const truncateText = (s, max) => { const str = String(s || ''); return str.length <= max ? str : str.slice(0, Math.max(0, max - 1)) + '…'; };
         const attrEscape = (s) => String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
@@ -1046,6 +1213,7 @@
             if(unsubUserDoc) unsubUserDoc();
             unsubUserDoc = onSnapshot(doc(db, "users", uid), snap => {
                 const data = snap.data() || {};
+                if(data.taskAvatar && String(data.taskAvatar).trim()) myTaskAvatar = String(data.taskAvatar).trim().slice(0, 8);
                 const lastTs = Number(localStorage.getItem('lastFlashTs') || 0);
                 const incomingTs = Number(data.flashSignalAt || 0);
                 if(incomingTs > lastTs) {
@@ -1099,7 +1267,7 @@
             try {
                 const r = await createUserWithEmailAndPassword(auth, e, p);
                 await updateProfile(r.user, { displayName: nick });
-                await setDoc(doc(db, "users", r.user.uid), { displayName: nick, email: e });
+                await setDoc(doc(db, "users", r.user.uid), { displayName: nick, email: e, taskAvatar: '🦫' });
                 auth.languageCode = 'ru'; await sendEmailVerification(r.user);
                 showToast("Успех!", `Ваш Ник: ${nick}. Подтвердите почту!`); 
                 await signOut(auth); toggleAuth('login');
@@ -1139,9 +1307,12 @@
                 p.classList.remove('hidden');
                 if(btn) btn.textContent = 'Фильтры ▲';
             }
+            const cv = document.getElementById('cal-view-mode');
+            const savedCal = localStorage.getItem('calView');
+            if(cv && savedCal && ['day','week','month'].includes(savedCal)) cv.value = savedCal;
+            const fd = document.getElementById('filter-date');
+            if(cv && cv.value === 'day' && fd && !fd.value) fd.value = new Date().toLocaleDateString('en-CA');
         })();
-        window.leakDataPrank = () => showConfirm("Слив данных", "Все ваши задачи уйдут в базу 1С. Продолжить?", async () => { handleLogout(); setTimeout(()=>alert("Не ну ты серьезно? Это ж шутка!"), 500); });
-
         window.switchView = (id) => {
             document.querySelectorAll('.main-nav button.nav-link').forEach(l => l.classList.remove('active'));
             const activeBtn = document.querySelector(`.main-nav button.nav-link[onclick*="switchView('${id}')"]`);
@@ -1150,7 +1321,7 @@
             document.getElementById('view-'+id).classList.remove('hidden');
         };
 
-        window.setSpace = (id) => {
+        window.setSpace = async (id) => {
             currentSpace = id;
             document.querySelectorAll('.space-tab').forEach(tab => {
                 tab.classList.toggle('active', tab.dataset.space === id);
@@ -1161,6 +1332,7 @@
             } else {
                 const team = myTeams.find(t => t.id === id);
                 heading.innerText = team ? `Заметки — ${team.name}` : "Заметки";
+                await ensureTeamMemberMeta(id);
             }
             renderNotes(); renderTasks(); renderCalendar();
         };
@@ -1326,25 +1498,25 @@
                 showToast("Заметка", "Заметка обновлена");
             }, true);
         };
-        window.openTaskModal = (id = '') => {
+        window.openTaskModal = async (id = '') => {
+            if(currentSpace !== 'personal') await ensureTeamMemberMeta(currentSpace);
             const titleEl = document.getElementById('task-modal-title');
             const idEl = document.getElementById('modal-task-id');
             const sourceNoteEl = document.getElementById('modal-source-note-id');
             const taskTitle = document.getElementById('modal-task-title');
             const taskDesc = document.getElementById('modal-task-desc');
             const taskTag = document.getElementById('modal-task-tag');
-            const taskEmoji = document.getElementById('modal-task-emoji');
             const taskPriority = document.getElementById('modal-task-priority');
             const taskDate = document.getElementById('modal-task-date');
             const taskStatus = document.getElementById('modal-task-status');
             const taskCompletedDate = document.getElementById('modal-task-completed-date');
+            const assignSel = document.getElementById('modal-task-assignee');
             const source = id ? allItems.find(x => x.id === id) : null;
 
             idEl.value = '';
             sourceNoteEl.value = '';
             taskTitle.value = '';
             taskDesc.value = '';
-            taskEmoji.value = '';
             taskTag.value = '';
             taskPriority.value = 'medium';
             taskDate.value = '';
@@ -1356,24 +1528,33 @@
                 idEl.value = source.id;
                 taskTitle.value = source.title || '';
                 taskDesc.value = source.description || '';
-                taskEmoji.value = source.emoji || '';
                 taskTag.value = source.tag || '';
                 taskPriority.value = source.priority || 'medium';
                 taskDate.value = source.dueDate || '';
                 taskStatus.value = source.status || 'plan';
                 taskCompletedDate.value = source.completedAt ? source.completedAt.split('T')[0] : '';
+                fillAssigneeSelect(assignSel, source, true);
             } else if(source?.itemType === 'note' || (!source?.itemType && source?.text)) {
                 titleEl.innerText = "Создать задачу из заметки";
                 sourceNoteEl.value = source.id;
                 taskTitle.value = source.text || '';
+                fillAssigneeSelect(assignSel, null, false);
             } else {
                 titleEl.innerText = "Новая задача";
+                fillAssigneeSelect(assignSel, null, false);
             }
             document.getElementById('task-modal').classList.remove('hidden');
         };
         window.openProfileModal = () => {
+            buildProfileAvatarGrid();
             const parsed = splitNick(auth.currentUser?.displayName || '');
             document.getElementById('edit-username').value = parsed.name || '';
+            document.querySelectorAll('#profile-avatar-grid .avatar-choice').forEach(b => {
+                b.classList.remove('selected');
+                if(b.dataset.emoji === myTaskAvatar) b.classList.add('selected');
+            });
+            if(!document.querySelector('#profile-avatar-grid .avatar-choice.selected'))
+                document.querySelector('#profile-avatar-grid .avatar-choice')?.classList.add('selected');
             const leaderTeams = myTeams.filter(t => t.owner === auth.currentUser.uid);
             const flashWrap = document.getElementById('flash-controls');
             const teamSel = document.getElementById('flash-team-select');
@@ -1414,12 +1595,8 @@
             await setDoc(doc(db, "users", targetUid), { flashSignalAt: Date.now(), flashBy: auth.currentUser.uid }, { merge: true });
             showToast("Флешка", `Отправлено: ${nick}`);
         };
-        window.applyEmojiPreset = (value) => {
-            if(!value) return;
-            document.getElementById('modal-task-emoji').value = value;
-        };
-        window.openTaskModalByDate = (date) => {
-            openTaskModal();
+        window.openTaskModalByDate = async (date) => {
+            await openTaskModal();
             document.getElementById('modal-task-date').value = date;
         };
 
@@ -1427,10 +1604,11 @@
             const title = document.getElementById('modal-task-title').value.trim(); if(!title) return;
             const selectedStatus = document.getElementById('modal-task-status').value;
             const completedDateRaw = document.getElementById('modal-task-completed-date').value;
+            const asg = resolveAssigneeFromSelect(document.getElementById('modal-task-assignee')?.value || 'self');
             const data = {
                 space: currentSpace, itemType:'task', title, description: document.getElementById('modal-task-desc').value,
-                emoji: (document.getElementById('modal-task-emoji').value || '').trim(),
-                tag: document.getElementById('modal-task-tag').value, priority: document.getElementById('modal-task-priority').value,
+                emoji: '', tag: document.getElementById('modal-task-tag').value, priority: document.getElementById('modal-task-priority').value,
+                taskAvatar: asg.taskAvatar, assigneeKind: asg.assigneeKind, assigneeUid: asg.assigneeUid || null,
                 dueDate: document.getElementById('modal-task-date').value, status: selectedStatus,
                 userId: auth.currentUser.uid, updatedAt: new Date().toISOString()
             };
@@ -1479,15 +1657,57 @@
 
             if(viewMode === 'table') {
                 grid.classList.remove('tasks-grid');
-                const noDeadline = filtered.filter(t => !t.dueDate);
-                let tbl = `<table class="stats-table"><tr><th>Задача</th><th>Статус</th><th>Дедлайн</th><th>Приоритет</th></tr>`;
-                filtered.forEach(t => tbl += `<tr onclick="selectTask('${t.id}')" style="cursor:pointer;"><td title="${attrEscape(t.title)}">${escapeHtml(truncateText(t.title, 52))}</td><td>${t.status}</td><td>${t.dueDate || '-'}</td><td>${t.priority || '-'}</td></tr>`);
-                tbl += `</table>`;
-                const noDue = noDeadline.length ? `<div style="margin-top:8px; font-size:12px; color:var(--text-muted);">Без дедлайна: ${noDeadline.map(t => escapeHtml(truncateText(t.title, 40))).join(', ')}</div>` : '';
-                grid.innerHTML = tbl + noDue;
+                grid.classList.add('tasks-grid-table-fill');
+                if(!filtered.length) {
+                    grid.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">Нет задач по фильтру.</p>';
+                    return;
+                }
+                const prioRank = { high: 0, medium: 1, low: 2 };
+                const sorted = [...filtered].sort((a, b) => {
+                    const ad = a.dueDate || '9999-12-31', bd = b.dueDate || '9999-12-31';
+                    if(ad !== bd) return ad.localeCompare(bd);
+                    const so = { plan:0, todo:1, wait:2, done:3 };
+                    const as = so[a.status||'plan'] ?? 0, bs = so[b.status||'plan'] ?? 0;
+                    if(as !== bs) return as - bs;
+                    return (prioRank[a.priority] ?? 1) - (prioRank[b.priority] ?? 1);
+                });
+                const dateKeys = [];
+                const seen = new Set();
+                sorted.forEach(t => {
+                    const k = t.dueDate || '__nodate__';
+                    if(!seen.has(k)) { seen.add(k); dateKeys.push(k); }
+                });
+                const months = ["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
+                const ruDate = (ds) => {
+                    if(ds === '__nodate__') return 'Без дедлайна';
+                    const p = ds.split('-').map(Number);
+                    return `${p[2]} ${months[p[1]-1]} ${p[0]}`;
+                };
+                const stLabel = { plan: 'PLAN', todo: 'TO DO', wait: 'WAIT', done: 'DONE' };
+                const statusOrder = ['plan','todo','wait','done'];
+                let html = '<div class="tasks-table-grouped"><table class="stats-table"><thead><tr><th class="tg-av"></th><th>Задача</th><th>Статус</th><th>Важн.</th></tr></thead><tbody>';
+                dateKeys.forEach(dk => {
+                    const blockTasks = sorted.filter(t => (t.dueDate || '__nodate__') === dk);
+                    if(!blockTasks.length) return;
+                    html += `<tr class="tg-date-row"><td colspan="4" class="tg-date">${ruDate(dk)}</td></tr>`;
+                    statusOrder.forEach(st => {
+                        const slice = blockTasks.filter(t => (t.status||'plan') === st);
+                        if(!slice.length) return;
+                        html += `<tr class="tg-sep-row"><td colspan="4"><div class="tg-status-sep st-${st}">${stLabel[st]}</div></td></tr>`;
+                        slice.forEach(t => {
+                            const av = escapeHtml(taskAvatarGlyph(t));
+                            const active = selectedTaskId === t.id ? 'active-task' : '';
+                            const pr = t.priority === 'high' ? 'row-prio-high' : '';
+                            html += `<tr class="tg-task-row ${active} ${pr}" data-task-id="${t.id}" onclick="selectTask('${t.id}')"><td class="tg-av">${av}</td><td title="${attrEscape(t.title)}">${escapeHtml(truncateText(t.title, 56))}</td><td><span class="status-chip ${t.status}">${(t.status||'plan').toUpperCase()}</span></td><td>${escapeHtml(t.priority||'-')}</td></tr>`;
+                        });
+                    });
+                });
+                html += '</tbody></table></div>';
+                grid.innerHTML = html;
                 return;
             }
 
+            grid.classList.remove('tasks-grid-table-fill');
             const groups = { plan: [], todo: [], wait: [], done: [] };
             filtered.forEach(t => groups[t.status || 'plan']?.push(t));
             const groupMeta = [
@@ -1497,79 +1717,159 @@
                 { key: 'done', title: 'Done' }
             ];
             grid.classList.remove('tasks-grid');
-            grid.innerHTML = `<div class="task-groups">${groupMeta.map(g => `<div class="task-group col-${g.key}" ondragover="allowDropTask(event)" ondragenter="setGroupDragState(event,true)" ondragleave="setGroupDragState(event,false)" ondrop="dropTaskToStatus(event,'${g.key}')"><div class="task-group-title"><span class="status-chip ${g.key}">${g.title}</span><span>${groups[g.key].length}</span></div><div id="group-${g.key}" class="task-list"></div></div>`).join('')}</div>`;
+            grid.innerHTML = `<div class="tasks-columns-wrap">${groupMeta.map(g => `<div class="task-col col-${g.key}" ondragover="allowDropTask(event)" ondragenter="setColDragState(event,true)" ondragleave="setColDragState(event,false)" ondrop="dropTaskToStatus(event,'${g.key}')"><div class="task-col-head"><span class="status-chip ${g.key}">${g.title}</span><span>${groups[g.key].length}</span></div><div id="group-${g.key}" class="task-col-scroll task-list"></div></div>`).join('')}</div>`;
 
             groupMeta.forEach(g => groups[g.key].forEach(t => {
                 const prior = t.priority === 'high' ? 'priority-high' : '';
-                const emoji = t.emoji ? `${t.emoji}` : '';
                 const doneMeta = t.completedAt ? `<div style="font-size:10px; color:var(--st-done); margin-top:4px;">Завершено: ${t.completedAt.split('T')[0]}</div>` : '';
-                const statusVisual = t.status === 'todo'
-                    ? `<div class="status-visual"><span class="gear">⚙️</span><span class="hammer">🔨</span></div>`
-                    : t.status === 'wait'
-                    ? `<div class="status-visual">WAIT</div>`
-                    : `<div class="status-visual">${emoji}</div>`;
                 const isActive = selectedTaskId === t.id ? 'active-task' : '';
                 const titleTip = attrEscape(t.title || '');
-                const titleShow = escapeHtml(truncateText(t.title, 44));
-                const descHtml = escapeHtml(t.description || '...');
-                document.getElementById(`group-${g.key}`).innerHTML += `<div class="task-card status-${t.status} ${prior} ${isActive}" data-task-id="${t.id}" draggable="true" ondragstart="startDragTask(event,'${t.id}')" onclick="selectTask('${t.id}'); this.classList.toggle('expanded')">
-                    <div style="display:flex; justify-content:space-between; gap:8px; align-items:flex-start; min-width:0;"><b class="task-card-title" title="${titleTip}">${titleShow}</b><span class="status-chip ${t.status}" style="flex-shrink:0;">${(t.status || 'plan').toUpperCase()}</span></div>
-                    ${statusVisual}
+                const titleShow = escapeHtml(truncateText(t.title, 36));
+                const descHtml = escapeHtml((t.description || '').trim() || '—');
+                const av = escapeHtml(taskAvatarGlyph(t));
+                document.getElementById(`group-${g.key}`).innerHTML += `<div class="task-card status-${t.status} ${prior} ${isActive}" data-task-id="${t.id}" draggable="true" ondragstart="startDragTask(event,'${t.id}')" onclick="selectTask('${t.id}')">
+                    <div class="task-card-title-row"><span class="task-avatar-mark" aria-hidden="true">${av}</span><span class="task-title-sep"></span><b class="task-card-title" title="${titleTip}">${titleShow}</b><span class="status-chip ${t.status}" style="flex-shrink:0;margin-left:auto;">${(t.status || 'plan').toUpperCase()}</span></div>
                     <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">#${escapeHtml(t.tag || '')} | 📅 ${t.dueDate || '-'}</div>
                     ${doneMeta}
-                    <div class="task-details" onclick="event.stopPropagation()">
-                        <p style="font-size:12px;">${descHtml}</p>
-                    </div>
+                    <div class="task-details" onclick="event.stopPropagation()"><p>${descHtml}</p></div>
                 </div>`;
             }));
         };
 
         window.renderCalendar = () => {
-            const y = currentDate.getFullYear(); const m = currentDate.getMonth();
-            document.getElementById('cal-month-year').innerText = `${["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"][m]} ${y}`;
-            const grid = document.getElementById('cal-days-grid'); grid.innerHTML = '';
-            const first = new Date(y, m, 1).getDay(); const days = new Date(y, m + 1, 0).getDate();
-            let start = first === 0 ? 6 : first - 1;
+            const mode = document.getElementById('cal-view-mode')?.value || 'month';
+            const root = document.getElementById('cal-body-root');
+            const dowRow = document.getElementById('cal-dow-row');
+            const titleEl = document.getElementById('cal-month-year');
+            if(!root || !titleEl) return;
+            const months = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+            const wdShort = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
             const todayStr = new Date().toLocaleDateString('en-CA');
             const filterDs = document.getElementById('filter-date')?.value || '';
-            for(let i=0; i<start; i++) grid.innerHTML += `<div class="cal-day" style="opacity:0; pointer-events:none;"></div>`;
-            const calVisibleLines = 4;
-            const calTitleMax = 16;
-            for(let d=1; d<=days; d++) {
-                const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const tsks = allItems.filter(i => i.itemType==='task' && i.dueDate === ds && i.space === currentSpace);
-                const nAll = tsks.length;
-                const countBadge = nAll > 0 ? `<span class="cal-day-count" title="Задач: ${nAll}">${nAll}</span>` : '';
-                const slice = tsks.slice(0, calVisibleLines);
-                let th = '';
-                slice.forEach(t => { th += `<div class="cal-day-task" title="${attrEscape(t.title)}">${escapeHtml(truncateText(t.title, calTitleMax))}</div>`; });
-                const more = nAll > calVisibleLines ? `<div class="cal-day-more" title="Ещё ${nAll - calVisibleLines} задач(и)">•••</div>` : '';
-                const dayCls = `cal-day${ds === todayStr ? ' today' : ''}${filterDs === ds ? ' cal-filtered' : ''}`;
-                grid.innerHTML += `<div class="${dayCls}" onclick="selectDateFilter('${ds}')" ondragover="allowDropTask(event)" ondrop="dropTaskToDate(event,'${ds}')"><div class="cal-day-head"><span class="cal-day-num">${d}</span>${countBadge}</div><div class="cal-day-tasks">${th}</div>${more}<button class="btn-icon" style="font-size:10px;" onclick="event.stopPropagation(); openTaskModalByDate('${ds}')">+ задача</button></div>`;
+
+            if(mode === 'month') {
+                dowRow.classList.remove('hidden');
+                root.innerHTML = '<div id="cal-days-grid" class="cal-days"></div>';
+                const y = currentDate.getFullYear(); const m = currentDate.getMonth();
+                titleEl.innerText = `${months[m]} ${y}`;
+                const grid = document.getElementById('cal-days-grid');
+                const first = new Date(y, m, 1).getDay(); const days = new Date(y, m + 1, 0).getDate();
+                let start = first === 0 ? 6 : first - 1;
+                for(let i=0; i<start; i++) grid.innerHTML += `<div class="cal-day" style="opacity:0; pointer-events:none;"></div>`;
+                const calVisibleLines = 4;
+                const calTitleMax = 16;
+                for(let d=1; d<=days; d++) {
+                    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                    const tsks = allItems.filter(i => i.itemType==='task' && i.dueDate === ds && i.space === currentSpace);
+                    const nAll = tsks.length;
+                    const countBadge = nAll > 0 ? `<span class="cal-day-count" title="Задач: ${nAll}">${nAll}</span>` : '';
+                    const slice = tsks.slice(0, calVisibleLines);
+                    let th = '';
+                    slice.forEach(t => { th += `<div class="cal-day-task" title="${attrEscape(t.title)}">${escapeHtml(truncateText(t.title, calTitleMax))}</div>`; });
+                    const more = nAll > calVisibleLines ? `<div class="cal-day-more" title="Ещё ${nAll - calVisibleLines} задач(и)">•••</div>` : '';
+                    const dayCls = `cal-day${ds === todayStr ? ' today' : ''}${filterDs === ds ? ' cal-filtered' : ''}`;
+                    grid.innerHTML += `<div class="${dayCls}" onclick="selectDateFilter('${ds}')" ondragover="allowDropTask(event)" ondrop="dropTaskToDate(event,'${ds}')"><div class="cal-day-head"><span class="cal-day-num">${d}</span>${countBadge}</div><div class="cal-day-tasks">${th}</div>${more}<button class="btn-icon" style="font-size:10px;" onclick="event.stopPropagation(); openTaskModalByDate('${ds}')">+ задача</button></div>`;
+                }
+                syncNotesHeight();
+                return;
             }
+
+            dowRow.classList.add('hidden');
+            if(mode === 'week') {
+                const mon = calWeekMonday(currentDate);
+                const sun = calAddDays(mon, 6);
+                titleEl.innerText = `${mon.getDate()} ${months[mon.getMonth()].slice(0,3)} – ${sun.getDate()} ${months[sun.getMonth()].slice(0,3)} ${sun.getFullYear()}`;
+                root.innerHTML = '<div class="cal-week-grid" id="cal-week-grid"></div>';
+                const wgrid = document.getElementById('cal-week-grid');
+                for(let i=0; i<7; i++) {
+                    const d = calAddDays(mon, i);
+                    const ds = d.toLocaleDateString('en-CA');
+                    const tsks = allItems.filter(i => i.itemType==='task' && i.dueDate === ds && i.space === currentSpace);
+                    const list = tsks.map(t => `<div class="cal-day-task" title="${attrEscape(t.title)}" onclick="event.stopPropagation();selectTask('${t.id}')">${escapeHtml(truncateText(t.title, 16))}</div>`).join('');
+                    const cls = `cal-week-day${ds === todayStr ? ' today' : ''}${filterDs === ds ? ' cal-filtered' : ''}`;
+                    wgrid.innerHTML += `<div class="${cls}" onclick="selectDateFilter('${ds}')" ondragover="allowDropTask(event)" ondrop="dropTaskToDate(event,'${ds}')"><div class="cal-week-day-head"><span>${wdShort[d.getDay()]} ${d.getDate()}</span>${tsks.length ? `<span class="cal-day-count">${tsks.length}</span>` : ''}</div><div class="cal-week-day-list">${list}</div><button type="button" class="btn-icon" style="font-size:9px;margin-top:4px;" onclick="event.stopPropagation();openTaskModalByDate('${ds}')">+</button></div>`;
+                }
+                syncNotesHeight();
+                return;
+            }
+
+            const d = calAddDays(currentDate, 0);
+            const ds = d.toLocaleDateString('en-CA');
+            titleEl.innerText = d.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            const tsks = allItems.filter(i => i.itemType==='task' && i.dueDate === ds && i.space === currentSpace);
+            const items = tsks.map(t => `<div class="cal-day-list-item" onclick="selectTask('${t.id}')"><span style="margin-right:6px;">${escapeHtml(taskAvatarGlyph(t))}</span>${escapeHtml(truncateText(t.title, 90))}</div>`).join('');
+            root.innerHTML = `<div class="cal-day-panel"><div class="cal-day-panel-head"><h4 class="cal-day-panel-title">Задачи на день</h4><button type="button" class="btn-secondary btn-cal-nav" onclick="openTaskModalByDate('${ds}')">+ Задача</button></div><div class="cal-day-task-list" ondragover="allowDropTask(event)" ondrop="dropTaskToDate(event,'${ds}')">${items || '<span style="color:var(--text-muted);font-size:12px;">Нет задач — добавьте или перетащите карточку.</span>'}</div></div>`;
             syncNotesHeight();
+        };
+
+        window.onCalViewModeChange = () => {
+            const mode = document.getElementById('cal-view-mode').value;
+            localStorage.setItem('calView', mode);
+            if(mode === 'day') {
+                const fd = document.getElementById('filter-date').value;
+                if(fd) {
+                    const p = fd.split('-').map(Number);
+                    currentDate = new Date(p[0], p[1]-1, p[2]);
+                } else {
+                    const t = new Date();
+                    currentDate = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+                    document.getElementById('filter-date').value = currentDate.toLocaleDateString('en-CA');
+                    renderTasks();
+                }
+            } else if(mode === 'week') {
+                document.getElementById('filter-date').value = '';
+                renderTasks();
+            }
+            renderCalendar();
+        };
+
+        window.calNav = (dir) => {
+            const mode = document.getElementById('cal-view-mode')?.value || 'month';
+            if(mode === 'month') currentDate.setMonth(currentDate.getMonth() + dir);
+            else if(mode === 'week') currentDate.setDate(currentDate.getDate() + dir * 7);
+            else {
+                currentDate.setDate(currentDate.getDate() + dir);
+                document.getElementById('filter-date').value = currentDate.toLocaleDateString('en-CA');
+                renderTasks();
+            }
+            renderCalendar();
         };
 
         window.renderAdvancedStats = () => {
             const from = document.getElementById('stat-from').value; const to = document.getElementById('stat-to').value;
             const space = document.getElementById('stat-space-select').value;
             document.getElementById('stats-content').classList.remove('hidden');
+            const statusAllowed = new Set([...document.querySelectorAll('.stat-st-cb:checked')].map(x => x.value));
+            if(!statusAllowed.size) {
+                showToast('Статистика', 'Отметьте хотя бы один статус');
+                return;
+            }
             let tasks = allItems.filter(i => i.itemType === 'task');
             if(space !== 'all') tasks = tasks.filter(t => t.space === space);
-            const filtered = tasks.filter(t => t.createdAt.split('T')[0] >= from && t.createdAt.split('T')[0] <= to);
+            let filtered = tasks.filter(t => t.createdAt.split('T')[0] >= from && t.createdAt.split('T')[0] <= to);
+            filtered = filtered.filter(t => statusAllowed.has(t.status || 'plan'));
             const perStatus = ['plan','todo','wait','done'].map(s => `<div style="font-size:11px; color:var(--text-muted);">${s.toUpperCase()}: <b style="color:var(--text-heading);">${filtered.filter(x => x.status === s).length}</b></div>`).join('');
-            document.getElementById('stats-summary').innerHTML = `<div class="stats-box"><div>Создано</div><div class="stats-num">${filtered.length}</div></div><div class="stats-box"><div>Выполнено</div><div class="stats-num" style="color:var(--st-done)">${filtered.filter(x=>x.status==='done').length}</div>${perStatus}</div>`;
-            let tbl = `<table class="stats-table"><tr><th>Дата</th><th>Команда/пространство</th><th>Задача</th><th>Статус</th><th>Завершено</th></tr>`;
+            document.getElementById('stats-summary').innerHTML = `<div class="stats-box"><div>В выборке</div><div class="stats-num">${filtered.length}</div></div><div class="stats-box"><div>Выполнено (в выборке)</div><div class="stats-num" style="color:var(--st-done)">${filtered.filter(x=>x.status==='done').length}</div>${perStatus}</div>`;
+            let tbl = `<table class="stats-table"><tr><th>Дата</th><th>Пространство</th><th></th><th>Задача</th><th>Статус</th><th>Завершено</th></tr>`;
             filtered.forEach(t => {
                 const teamName = t.space === 'personal' ? 'Личные' : (myTeams.find(tm => tm.id === t.space)?.name || 'Команда');
-                tbl += `<tr><td>${t.createdAt.split('T')[0]}</td><td>${teamName}</td><td>${t.emoji ? `${t.emoji} ` : ''}${t.title}</td><td>${t.status}</td><td>${t.completedAt ? t.completedAt.split('T')[0] : '-'}</td></tr>`;
+                const av = escapeHtml(taskAvatarGlyph(t));
+                tbl += `<tr><td>${t.createdAt.split('T')[0]}</td><td>${escapeHtml(teamName)}</td><td class="tg-av">${av}</td><td>${escapeHtml(t.title || '')}</td><td>${t.status}</td><td>${t.completedAt ? t.completedAt.split('T')[0] : '-'}</td></tr>`;
             });
             document.getElementById('stats-table-container').innerHTML = tbl + `</table>`;
         };
 
         window.deleteDocItem = (id) => showConfirm("Удалить?", "Это навсегда.", async () => { await deleteDoc(doc(db,"tasks",id)); showToast("Удаление", "Элемент удален"); });
-        window.changeMonth = (dir) => { currentDate.setMonth(currentDate.getMonth()+dir); renderCalendar(); };
-        window.selectDateFilter = (ds) => { document.getElementById('filter-date').value = ds; renderTasks(); renderCalendar(); };
+        window.changeMonth = (dir) => window.calNav(dir);
+        window.selectDateFilter = (ds) => {
+            document.getElementById('filter-date').value = ds;
+            const mode = document.getElementById('cal-view-mode')?.value;
+            if(mode === 'day' && ds) {
+                const p = ds.split('-').map(Number);
+                currentDate = new Date(p[0], p[1]-1, p[2]);
+            }
+            renderTasks(); renderCalendar();
+        };
         window.startDragTask = (e, id) => {
             window.__dragTaskId = id;
             if(e?.dataTransfer) {
@@ -1580,14 +1880,14 @@
         window.allowDropTask = (e) => {
             if(e) e.preventDefault();
         };
-        window.setGroupDragState = (e, isActive) => {
-            const group = e.currentTarget;
-            if(group) group.classList.toggle('drag-over', isActive);
+        window.setColDragState = (e, isActive) => {
+            const col = e.currentTarget;
+            if(col) col.classList.toggle('drag-over', isActive);
         };
         window.dropTaskToStatus = async (e, status) => {
             if(e) e.preventDefault();
-            const group = e.currentTarget;
-            if(group) group.classList.remove('drag-over');
+            const col = e.currentTarget;
+            if(col) col.classList.remove('drag-over');
             const id = (e?.dataTransfer?.getData('text/plain') || window.__dragTaskId || '').trim();
             if(!id) return;
             if(status === 'done') {
@@ -1629,8 +1929,8 @@
             selectedTaskId = id;
             const task = allItems.find(t => t.id === id);
             if(!task) return;
-            document.querySelectorAll('.task-card').forEach(el => el.classList.remove('active-task'));
-            const activeEl = document.querySelector(`.task-card[data-task-id="${id}"]`);
+            document.querySelectorAll('.task-card, .tg-task-row').forEach(el => el.classList.remove('active-task'));
+            const activeEl = document.querySelector(`.task-card[data-task-id="${id}"], .tg-task-row[data-task-id="${id}"]`);
             if(activeEl) activeEl.classList.add('active-task');
             document.getElementById('task-side-empty').classList.add('hidden');
             document.getElementById('task-side-form').classList.remove('hidden');
@@ -1643,7 +1943,10 @@
             document.getElementById('task-side-title').innerText = `Карточка задачи — ${statusText}${important}`;
             document.getElementById('side-title').value = task.title || '';
             document.getElementById('side-desc').value = task.description || '';
-            document.getElementById('side-emoji').value = task.emoji || '';
+            (async () => {
+                if(currentSpace !== 'personal') await ensureTeamMemberMeta(currentSpace);
+                fillAssigneeSelect(document.getElementById('side-assignee'), task, true);
+            })();
             document.getElementById('side-tag').value = task.tag || '';
             document.getElementById('side-priority').value = task.priority || 'medium';
             document.getElementById('side-status').value = task.status || 'plan';
@@ -1654,10 +1957,14 @@
             if(!selectedTaskId) return;
             const status = document.getElementById('side-status').value;
             const completedRaw = document.getElementById('side-completed').value;
+            const asg = resolveAssigneeFromSelect(document.getElementById('side-assignee')?.value || 'self');
             await updateDoc(doc(db,"tasks",selectedTaskId), {
                 title: document.getElementById('side-title').value.trim(),
                 description: document.getElementById('side-desc').value.trim(),
-                emoji: document.getElementById('side-emoji').value.trim(),
+                emoji: '',
+                taskAvatar: asg.taskAvatar,
+                assigneeKind: asg.assigneeKind,
+                assigneeUid: asg.assigneeUid || null,
                 tag: document.getElementById('side-tag').value.trim(),
                 priority: document.getElementById('side-priority').value,
                 status,
@@ -1696,11 +2003,13 @@
             const parsed = splitNick(auth.currentUser.displayName || '');
             const tag = tagPattern.test(parsed.tag) ? parsed.tag : generateTag();
             const nextNick = `${n}#${tag}`;
+            const picked = document.querySelector('#profile-avatar-grid .avatar-choice.selected')?.dataset?.emoji || myTaskAvatar || '🦫';
             await updateProfile(auth.currentUser, { displayName: nextNick });
-            await setDoc(doc(db, "users", auth.currentUser.uid), { displayName: nextNick }, { merge:true });
+            await setDoc(doc(db, "users", auth.currentUser.uid), { displayName: nextNick, taskAvatar: picked }, { merge:true });
+            myTaskAvatar = picked;
             renderUserIdentity(nextNick);
             closeModals();
-            showToast("Профиль", "Имя обновлено");
+            showToast("Профиль", "Профиль обновлён");
         };
         window.addEventListener('resize', syncNotesHeight);
 

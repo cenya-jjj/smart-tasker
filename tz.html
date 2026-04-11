@@ -881,7 +881,8 @@
         })();
 
         onAuthStateChanged(auth, async user => {
-            if (user && user.emailVerified) {
+            // Доступ как в задачнике: достаточно вошедшего пользователя (иначе ссылка «ТЗ» из index выглядит «сломанной»).
+            if (user) {
                 uid = user.uid;
                 showApp();
                 if (listUnsub) listUnsub();
@@ -896,6 +897,9 @@
                 });
                 if (!tzBootstrapped) {
                     tzBootstrapped = true;
+                    if (!user.emailVerified) {
+                        console.warn('TZ: email не подтверждён — при проблемах с правилами Firebase подтвердите почту в задачнике.');
+                    }
                     const params = new URLSearchParams(location.search);
                     const openId = (params.get('open') || '').trim();
                     if (openId) {
