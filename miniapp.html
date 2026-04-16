@@ -102,14 +102,35 @@
     .bottom-nav .tab-btn {
       min-height: 42px;
     }
+    .auth-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .hidden { display: none !important; }
   </style>
 </head>
 <body>
-  <div class="app">
+  <div id="screen-auth" class="app">
     <section class="card">
       <h1>Smart Tasker Mini</h1>
-      <div id="auth-state" class="meta">Подключение к Telegram...</div>
+      <p class="meta" style="margin:0 0 12px;">Войдите или зарегистрируйтесь. Сессия сохраняется на этом устройстве.</p>
+      <div id="auth-error" class="meta" style="color:var(--warn);min-height:1.2em;"></div>
+      <div class="row">
+        <label class="meta" for="auth-email">Email</label>
+        <input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com">
+        <label class="meta" for="auth-password">Пароль</label>
+        <input id="auth-password" type="password" autocomplete="current-password" placeholder="Не меньше 6 символов">
+        <div class="auth-actions">
+          <button type="button" id="btn-login">Войти</button>
+          <button type="button" id="btn-register" class="btn-secondary">Регистрация</button>
+        </div>
+        <button type="button" id="btn-telegram" class="btn-secondary hidden">Войти через Telegram</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="screen-app" class="app hidden">
+    <section class="card">
+      <h1>Smart Tasker Mini</h1>
+      <div id="auth-state" class="meta"></div>
+      <button type="button" id="btn-logout" class="btn-secondary" style="margin-top:8px;">Выйти</button>
     </section>
 
     <section class="card">
@@ -154,8 +175,18 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { initializeFirestore, collection, query, where, onSnapshot, addDoc, orderBy, limit, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import {
+      getAuth,
+      signInWithCustomToken,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged,
+      setPersistence,
+      browserLocalPersistence,
+      updateProfile
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { initializeFirestore, collection, query, where, onSnapshot, addDoc, orderBy, limit, updateDoc, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDXGtaGi0uqnmEox06KNJKzaV7WD5pdyuY",
@@ -174,6 +205,9 @@
     const tg = window.Telegram?.WebApp;
 
     const $ = (id) => document.getElementById(id);
+    const screenAuth = $("screen-auth");
+    const screenApp = $("screen-app");
+    const authError = $("auth-error");
     const authState = $("auth-state");
     const tasksWrap = $("tasks-wrap");
     const notesWrap = $("notes-wrap");
@@ -184,6 +218,19 @@
     const tabNotes = $("tab-notes");
     let unsub = null;
     let lastItems = [];
+
+    function showAuthScreen() {
+      screenAuth.classList.remove("hidden");
+      screenApp.classList.add("hidden");
+    }
+
+    function showMainScreen(user) {
+      screenAuth.classList.add("hidden");
+      screenApp.classList.remove("hidden");
+      const email = user.email || "";
+      const via = user.providerData?.some((p) => p.providerId === "custom") ? "Telegram" : "Email";
+      authState.innerHTML = `Вы вошли <span class="pill ok">${escapeHtml(via)}</span> ${email ? `<span class="meta">${escapeHtml(email)}</span>` : ""}`;
+    }
 
     function escapeHtml(s) {
       const d = document.createElement("div");
@@ -301,7 +348,8 @@
       const initData = tg.initData || "";
       if (!initData) throw new Error("Откройте приложение через кнопку бота (WebApp).");
 
-      authState.innerHTML = 'Проверка Telegram... <span class="pill warn">in progress</span>';
+      authError.textContent = "";
+      authState.innerHTML = 'Telegram... <span class="pill warn">проверка</span>';
       const res = await fetch(TELEGRAM_AUTH_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -314,9 +362,18 @@
       const data = await res.json();
       if (!data.customToken) throw new Error("Не получили customToken от сервера");
 
+      await setPersistence(auth, browserLocalPersistence);
       await signInWithCustomToken(auth, data.customToken);
-      authState.innerHTML = `Вход выполнен <span class="pill ok">uid: ${escapeHtml(auth.currentUser.uid)}</span>`;
-      startTasksListener(auth.currentUser.uid);
+    }
+
+    async function ensureUserDoc(user) {
+      if (!user.email) return;
+      const name = user.displayName || user.email.split("@")[0] || "Пользователь";
+      await setDoc(doc(db, "users", user.uid), {
+        displayName: name,
+        email: user.email,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
     }
 
     function startTasksListener(uid) {
@@ -393,9 +450,82 @@
     tabTasks.addEventListener("click", () => switchTab("tasks"));
     tabNotes.addEventListener("click", () => switchTab("notes"));
 
-    authWithTelegram().catch((err) => {
-      authState.textContent = err.message || "Ошибка входа";
+    $("btn-logout").addEventListener("click", async () => {
+      if (unsub) { unsub(); unsub = null; }
+      await signOut(auth);
     });
+
+    $("btn-login").addEventListener("click", async () => {
+      const email = $("auth-email").value.trim();
+      const password = $("auth-password").value;
+      if (!email || !password) {
+        authError.textContent = "Введите email и пароль.";
+        return;
+      }
+      authError.textContent = "Вход...";
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+        await signInWithEmailAndPassword(auth, email, password);
+        authError.textContent = "";
+      } catch (e) {
+        authError.textContent = e.message || "Ошибка входа";
+      }
+    });
+
+    $("btn-register").addEventListener("click", async () => {
+      const email = $("auth-email").value.trim();
+      const password = $("auth-password").value;
+      if (!email || password.length < 6) {
+        authError.textContent = "Email и пароль не меньше 6 символов.";
+        return;
+      }
+      authError.textContent = "Регистрация...";
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        const base = email.split("@")[0] || "Пользователь";
+        await updateProfile(cred.user, { displayName: base });
+        await ensureUserDoc(cred.user);
+        authError.textContent = "";
+      } catch (e) {
+        authError.textContent = e.message || "Ошибка регистрации";
+      }
+    });
+
+    const btnTelegram = $("btn-telegram");
+    if (tg?.initData) {
+      btnTelegram.classList.remove("hidden");
+      btnTelegram.addEventListener("click", () => {
+        authWithTelegram().catch((e) => {
+          authError.textContent = e.message || "Telegram";
+        });
+      });
+    }
+
+    (async () => {
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+      } catch (_) {}
+
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          showAuthScreen();
+          if (unsub) { unsub(); unsub = null; }
+          return;
+        }
+        showMainScreen(user);
+        if (user.email) await ensureUserDoc(user);
+        startTasksListener(user.uid);
+      });
+
+      if (tg?.initData) {
+        try {
+          await authWithTelegram();
+        } catch (e) {
+          authError.textContent = e.message || "Войдите по email или нажмите «Войти через Telegram».";
+        }
+      }
+    })();
   </script>
 </body>
 </html>
