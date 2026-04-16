@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Smart Tasker Mini App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #161a23;
+      --border: #2a3040;
+      --text: #f5f7ff;
+      --muted: #a3adc2;
+      --accent: #6b7cff;
+      --ok: #31c48d;
+      --warn: #f59e0b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .app { max-width: 560px; margin: 0 auto; display: grid; gap: 12px; padding-bottom: 92px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+    }
+    h1 { margin: 0 0 8px; font-size: 20px; }
+    .meta { color: var(--muted); font-size: 12px; }
+    input, textarea, select, button {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0d1018;
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    textarea { min-height: 84px; resize: vertical; }
+    button {
+      background: var(--accent);
+      border-color: var(--accent);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-secondary {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text);
+    }
+    .row { display: grid; gap: 8px; }
+    .task-item, .note-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      display: grid;
+      gap: 4px;
+      background: #101522;
+    }
+    .task-title { font-size: 14px; font-weight: 700; }
+    .task-sub { color: var(--muted); font-size: 12px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 8px;
+    }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .tab-btn.active { outline: 2px solid var(--accent); }
+    .actions { display: flex; gap: 8px; align-items: center; }
+    .actions button, .actions select { width: auto; }
+    .bottom-nav {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: calc(10px + env(safe-area-inset-bottom));
+      z-index: 50;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      max-width: 560px;
+      margin: 0 auto;
+      background: rgba(22, 26, 35, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 8px;
+      backdrop-filter: blur(8px);
+    }
+    .bottom-nav .tab-btn {
+      min-height: 42px;
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="card">
+      <h1>Smart Tasker Mini</h1>
+      <div id="auth-state" class="meta">Подключение к Telegram...</div>
+    </section>
+
+    <section class="card">
+      <div class="row">
+        <label class="meta" for="task-title">Новая задача</label>
+        <input id="task-title" placeholder="Что нужно сделать?">
+        <textarea id="task-desc" placeholder="Короткое описание (опционально)"></textarea>
+        <div class="row" style="grid-template-columns:1fr 1fr;">
+          <input id="task-date" type="date">
+          <select id="task-priority">
+            <option value="high">High</option>
+            <option value="medium" selected>Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <button id="create-task-btn">Добавить задачу</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row">
+        <label class="meta" for="note-text">Новая заметка</label>
+        <textarea id="note-text" placeholder="Быстрые мысли, входящие, идеи..."></textarea>
+        <button id="create-note-btn" class="btn-secondary">Добавить заметку</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <strong>Мои записи</strong>
+        <button class="btn-secondary" id="reload-btn" style="max-width:120px;">Обновить</button>
+      </div>
+      <div class="meta" style="margin-top:10px;">Переключение через нижние кнопки</div>
+      <div id="tasks-wrap" class="row" style="margin-top:10px;"></div>
+      <div id="notes-wrap" class="row hidden" style="margin-top:10px;"></div>
+    </section>
+  </div>
+  <nav class="bottom-nav">
+    <button id="tab-tasks" class="tab-btn active">Задачи</button>
+    <button id="tab-notes" class="tab-btn btn-secondary">Заметки</button>
+  </nav>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { initializeFirestore, collection, query, where, onSnapshot, addDoc, orderBy, limit, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDXGtaGi0uqnmEox06KNJKzaV7WD5pdyuY",
+      authDomain: "talkerj.firebaseapp.com",
+      projectId: "talkerj",
+      storageBucket: "talkerj.firebasestorage.app",
+      messagingSenderId: "602611717919",
+      appId: "1:602611717919:web:cbcb845e19f4eaa336022a"
+    };
+
+    const TELEGRAM_AUTH_ENDPOINT = "https://us-central1-talkerj.cloudfunctions.net/telegramAuth";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = initializeFirestore(app, { experimentalForceLongPolling: true });
+    const tg = window.Telegram?.WebApp;
+
+    const $ = (id) => document.getElementById(id);
+    const authState = $("auth-state");
+    const tasksWrap = $("tasks-wrap");
+    const notesWrap = $("notes-wrap");
+    const createTaskBtn = $("create-task-btn");
+    const createNoteBtn = $("create-note-btn");
+    const reloadBtn = $("reload-btn");
+    const tabTasks = $("tab-tasks");
+    const tabNotes = $("tab-notes");
+    let unsub = null;
+    let lastItems = [];
+
+    function escapeHtml(s) {
+      const d = document.createElement("div");
+      d.textContent = s == null ? "" : String(s);
+      return d.innerHTML;
+    }
+
+    function showTasks(list) {
+      if (!list.length) {
+        tasksWrap.innerHTML = '<div class="meta">Задач пока нет.</div>';
+        return;
+      }
+      tasksWrap.innerHTML = list.map((t) => {
+        const due = t.dueDate || "без дедлайна";
+        const st = t.status || "plan";
+        return `<article class="task-item">
+          <div class="task-title">${escapeHtml(t.title || "Без названия")}</div>
+          <div class="task-sub">${escapeHtml(t.description || "")}</div>
+          <div class="actions">
+            <select data-action="status" data-id="${escapeHtml(t.id)}">
+              <option value="plan" ${st === "plan" ? "selected" : ""}>PLAN</option>
+              <option value="todo" ${st === "todo" ? "selected" : ""}>TO DO</option>
+              <option value="wait" ${st === "wait" ? "selected" : ""}>WAIT</option>
+              <option value="done" ${st === "done" ? "selected" : ""}>DONE</option>
+            </select>
+            <button class="btn-secondary" data-action="delete-task" data-id="${escapeHtml(t.id)}">Удалить</button>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <span class="pill">${escapeHtml(st.toUpperCase())}</span>
+            <span class="pill">${escapeHtml(String(t.priority || "medium"))}</span>
+            <span class="pill">${escapeHtml(due)}</span>
+          </div>
+        </article>`;
+      }).join("");
+    }
+
+    function showNotes(list) {
+      if (!list.length) {
+        notesWrap.innerHTML = '<div class="meta">Заметок пока нет.</div>';
+        return;
+      }
+      notesWrap.innerHTML = list.map((n) => `
+        <article class="note-item">
+          <div>${escapeHtml(n.text || n.title || "Пустая заметка")}</div>
+          <div class="actions">
+            <button data-action="note-to-task" data-id="${escapeHtml(n.id)}">В задачу</button>
+            <button class="btn-secondary" data-action="delete-note" data-id="${escapeHtml(n.id)}">Удалить</button>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function bindActions() {
+      document.querySelectorAll('[data-action="status"]').forEach((el) => {
+        el.addEventListener("change", async (e) => {
+          const id = e.target.getAttribute("data-id");
+          const status = e.target.value;
+          const payload = { status, updatedAt: new Date().toISOString() };
+          payload.completedAt = status === "done" ? new Date().toISOString() : null;
+          await updateDoc(doc(db, "tasks", id), payload);
+        });
+      });
+      document.querySelectorAll('[data-action="delete-task"]').forEach((el) => {
+        el.addEventListener("click", async () => {
+          const id = el.getAttribute("data-id");
+          await deleteDoc(doc(db, "tasks", id));
+        });
+      });
+      document.querySelectorAll('[data-action="delete-note"]').forEach((el) => {
+        el.addEventListener("click", async () => {
+          const id = el.getAttribute("data-id");
+          await deleteDoc(doc(db, "tasks", id));
+        });
+      });
+      document.querySelectorAll('[data-action="note-to-task"]').forEach((el) => {
+        el.addEventListener("click", async () => {
+          const id = el.getAttribute("data-id");
+          const source = lastItems.find((x) => x.id === id);
+          if (!source || !auth.currentUser) return;
+          const nowIso = new Date().toISOString();
+          await addDoc(collection(db, "tasks"), {
+            space: "personal",
+            itemType: "task",
+            title: String(source.text || source.title || "Новая задача"),
+            description: "",
+            priority: "medium",
+            status: "plan",
+            dueDate: "",
+            taskAvatar: "📱",
+            assigneeKind: "self",
+            assigneeUid: auth.currentUser.uid,
+            userId: auth.currentUser.uid,
+            createdAt: nowIso,
+            updatedAt: nowIso,
+            completedAt: null
+          });
+          await deleteDoc(doc(db, "tasks", id));
+        });
+      });
+    }
+
+    function renderLists(items) {
+      lastItems = items;
+      const tasks = items.filter((i) => i.itemType === "task");
+      const notes = items.filter((i) => i.itemType === "note" || (!i.itemType && i.text));
+      showTasks(tasks);
+      showNotes(notes);
+      bindActions();
+    }
+
+    async function authWithTelegram() {
+      if (!tg) throw new Error("Telegram WebApp SDK не найден");
+      tg.ready();
+      tg.expand();
+      const initData = tg.initData || "";
+      if (!initData) throw new Error("Откройте приложение через кнопку бота (WebApp).");
+
+      authState.innerHTML = 'Проверка Telegram... <span class="pill warn">in progress</span>';
+      const res = await fetch(TELEGRAM_AUTH_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ initData })
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(`Ошибка авторизации: ${txt || res.status}`);
+      }
+      const data = await res.json();
+      if (!data.customToken) throw new Error("Не получили customToken от сервера");
+
+      await signInWithCustomToken(auth, data.customToken);
+      authState.innerHTML = `Вход выполнен <span class="pill ok">uid: ${escapeHtml(auth.currentUser.uid)}</span>`;
+      startTasksListener(auth.currentUser.uid);
+    }
+
+    function startTasksListener(uid) {
+      if (unsub) unsub();
+      const q = query(collection(db, "tasks"), where("userId", "==", uid), orderBy("createdAt", "desc"), limit(80));
+      unsub = onSnapshot(q, (snap) => {
+        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        renderLists(list);
+      }, (err) => {
+        authState.textContent = `Ошибка чтения задач: ${err.message}`;
+      });
+    }
+
+    async function createTask() {
+      const user = auth.currentUser;
+      if (!user) return;
+      const title = $("task-title").value.trim();
+      if (!title) return;
+
+      const dueDate = $("task-date").value || "";
+      const nowIso = new Date().toISOString();
+      await addDoc(collection(db, "tasks"), {
+        space: "personal",
+        itemType: "task",
+        title,
+        description: $("task-desc").value.trim(),
+        priority: $("task-priority").value,
+        status: "plan",
+        dueDate,
+        taskAvatar: "📱",
+        assigneeKind: "self",
+        assigneeUid: user.uid,
+        userId: user.uid,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+        completedAt: null
+      });
+
+      $("task-title").value = "";
+      $("task-desc").value = "";
+      $("task-date").value = "";
+    }
+
+    async function createNote() {
+      const user = auth.currentUser;
+      if (!user) return;
+      const text = $("note-text").value.trim();
+      if (!text) return;
+      await addDoc(collection(db, "tasks"), {
+        space: "personal",
+        itemType: "note",
+        text,
+        userId: user.uid,
+        createdAt: new Date().toISOString()
+      });
+      $("note-text").value = "";
+    }
+
+    function switchTab(view) {
+      const showTasksView = view === "tasks";
+      tasksWrap.classList.toggle("hidden", !showTasksView);
+      notesWrap.classList.toggle("hidden", showTasksView);
+      tabTasks.classList.toggle("active", showTasksView);
+      tabNotes.classList.toggle("active", !showTasksView);
+      tabTasks.classList.toggle("btn-secondary", !showTasksView);
+      tabNotes.classList.toggle("btn-secondary", showTasksView);
+    }
+
+    createTaskBtn.addEventListener("click", createTask);
+    createNoteBtn.addEventListener("click", createNote);
+    reloadBtn.addEventListener("click", () => {
+      if (auth.currentUser) startTasksListener(auth.currentUser.uid);
+    });
+    tabTasks.addEventListener("click", () => switchTab("tasks"));
+    tabNotes.addEventListener("click", () => switchTab("notes"));
+
+    authWithTelegram().catch((err) => {
+      authState.textContent = err.message || "Ошибка входа";
+    });
+  </script>
+</body>
+</html>

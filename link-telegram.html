@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Привязка Telegram</title>
+  <style>
+    body { font-family: Inter, -apple-system, sans-serif; margin: 0; padding: 16px; background: #0f1115; color: #f5f7ff; }
+    .card { max-width: 520px; margin: 20px auto; padding: 16px; border: 1px solid #2a3040; border-radius: 14px; background: #161a23; }
+    input, button { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #2a3040; margin-top: 8px; background: #0d1018; color: #f5f7ff; }
+    button { background: #6b7cff; border-color: #6b7cff; font-weight: 700; }
+    .muted { color: #a3adc2; font-size: 13px; }
+    .code { font-size: 28px; font-weight: 800; letter-spacing: 2px; margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2 style="margin:0 0 6px;">Привязка Telegram к email-аккаунту</h2>
+    <div class="muted">Войдите по почте, получите код и отправьте его боту: <code>/link КОД</code></div>
+
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Пароль">
+    <button id="login-btn">Войти</button>
+
+    <button id="code-btn" style="display:none;">Сгенерировать код привязки</button>
+    <div id="code-box" class="code" style="display:none;"></div>
+    <div id="status" class="muted" style="margin-top:8px;"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDXGtaGi0uqnmEox06KNJKzaV7WD5pdyuY",
+      authDomain: "talkerj.firebaseapp.com",
+      projectId: "talkerj",
+      storageBucket: "talkerj.firebasestorage.app",
+      messagingSenderId: "602611717919",
+      appId: "1:602611717919:web:cbcb845e19f4eaa336022a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const endpoint = "https://us-central1-talkerj.cloudfunctions.net/createTelegramLinkCode";
+
+    const $ = (id) => document.getElementById(id);
+    const statusEl = $("status");
+    const codeBtn = $("code-btn");
+    const codeBox = $("code-box");
+
+    $("login-btn").addEventListener("click", async () => {
+      try {
+        statusEl.textContent = "Вход...";
+        await signInWithEmailAndPassword(auth, $("email").value.trim(), $("password").value);
+        statusEl.textContent = "Вход выполнен. Теперь сгенерируйте код.";
+        codeBtn.style.display = "block";
+      } catch (err) {
+        statusEl.textContent = `Ошибка входа: ${err.message}`;
+      }
+    });
+
+    codeBtn.addEventListener("click", async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) throw new Error("Сначала войдите");
+        const idToken = await user.getIdToken(true);
+        statusEl.textContent = "Генерируем код...";
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`
+          },
+          body: "{}"
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+        codeBox.style.display = "block";
+        codeBox.textContent = data.code;
+        statusEl.textContent = "Отправьте боту: /link " + data.code + " (код живет 10 минут)";
+      } catch (err) {
+        statusEl.textContent = `Ошибка: ${err.message}`;
+      }
+    });
+  </script>
+</body>
+</html>
