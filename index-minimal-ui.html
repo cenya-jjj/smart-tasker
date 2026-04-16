@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Смарт Задачник — минималистичный макет (прототип)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-page: #0c0e12;
+            --frame: #151922;
+            --frame-border: rgba(34, 211, 238, 0.28);
+            --frame-glow: 0 0 0 1px rgba(34, 211, 238, 0.12), 0 0 24px rgba(34, 211, 238, 0.06);
+            --ink: #080a0d;
+            --ink-elevated: #0e1118;
+            --text: #e4e4e7;
+            --text-muted: #71717a;
+            --line: rgba(34, 211, 238, 0.08);
+            --line-strong: rgba(232, 121, 249, 0.2);
+            --cyber-cyan: #22d3ee;
+            --cyber-magenta: #e879f9;
+            --cyber-dim: rgba(34, 211, 238, 0.45);
+            --primary: #818cf8;
+            --danger: #f87171;
+            /* статусы — как в основном приложении + неон */
+            --st-plan: #9ca3af;
+            --st-todo: #fbbf24;
+            --st-wait: #60a5fa;
+            --st-done: #34d399;
+            --neon-orange: #ff7a18;
+        }
+
+        body.light-theme {
+            --bg-page: #ececf0;
+            --frame: #e0e4ea;
+            --frame-border: rgba(79, 70, 229, 0.35);
+            --frame-glow: 0 0 0 1px rgba(79, 70, 229, 0.12);
+            --ink: #fafafa;
+            --ink-elevated: #ffffff;
+            --text: #18181b;
+            --text-muted: #52525b;
+            --line: rgba(79, 70, 229, 0.1);
+            --line-strong: rgba(124, 58, 237, 0.2);
+            --cyber-cyan: #0891b2;
+            --cyber-magenta: #a21caf;
+            --cyber-dim: rgba(8, 145, 178, 0.5);
+            --primary: #4f46e5;
+            --danger: #dc2626;
+            --st-plan: #64748b;
+            --st-todo: #d97706;
+            --st-wait: #2563eb;
+            --st-done: #059669;
+            --neon-orange: #ea580c;
+        }
+
+        * { box-sizing: border-box; }
+        html, body { height: 100%; margin: 0; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg-page);
+            background-image: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(34, 211, 238, 0.07), transparent 50%),
+                radial-gradient(ellipse 80% 50% at 100% 50%, rgba(232, 121, 249, 0.05), transparent 45%);
+            color: var(--text);
+            font-size: 13px;
+            line-height: 1.45;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body.light-theme {
+            background-image: radial-gradient(ellipse 100% 60% at 50% 0%, rgba(79, 70, 229, 0.08), transparent 50%);
+        }
+
+        .shell {
+            max-width: 1280px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding: 0 20px 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .proto-badge {
+            font-size: 11px;
+            color: var(--text-muted);
+            padding: 10px 0 6px;
+            letter-spacing: 0.02em;
+        }
+
+        /* —— Header —— */
+        .app-header {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0 12px;
+            padding: 14px 0 12px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .header-nav {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .header-nav button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font: inherit;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 0;
+            width: auto;
+        }
+
+        .header-nav button:hover { color: var(--text); }
+        .header-nav button.active {
+            color: var(--cyber-cyan);
+            background: rgba(34, 211, 238, 0.1);
+            box-shadow: 0 0 16px rgba(34, 211, 238, 0.12);
+        }
+
+        body.light-theme .header-nav button.active {
+            color: var(--primary);
+            background: rgba(79, 70, 229, 0.1);
+            box-shadow: none;
+        }
+
+        .header-vrule {
+            width: 1px;
+            height: 20px;
+            background: linear-gradient(180deg, transparent, var(--cyber-dim), transparent);
+            margin: 0 8px 0 4px;
+            flex-shrink: 0;
+        }
+
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            flex-wrap: wrap;
+        }
+
+        .user-id {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--cyber-magenta);
+            letter-spacing: 0.04em;
+            text-shadow: 0 0 12px rgba(232, 121, 249, 0.25);
+        }
+
+        body.light-theme .user-id { color: var(--primary); text-shadow: none; }
+
+        .header-user button {
+            margin: 0;
+            width: auto;
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: 500;
+            border-radius: 6px;
+            border: 1px solid var(--frame-border);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .header-user button:hover { color: var(--cyber-cyan); border-color: var(--frame-border); box-shadow: 0 0 12px rgba(34, 211, 238, 0.15); }
+        .header-user .btn-exit {
+            border-color: transparent;
+            color: var(--danger);
+        }
+        .header-user .btn-exit:hover { color: var(--text); }
+
+        .hr {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--cyber-dim), var(--cyber-magenta), var(--cyber-dim), transparent);
+            opacity: 0.5;
+            margin: 0;
+            border: none;
+        }
+
+        /* —— Тонкая «терминальная» рамка + чёрное тело —— */
+        .panel-frame {
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.06), rgba(232, 121, 249, 0.04));
+            border: 1px solid var(--frame-border);
+            border-radius: 8px;
+            padding: 2px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            min-width: 0;
+            box-shadow: var(--frame-glow);
+        }
+
+        .panel-inner {
+            background: var(--ink);
+            border-radius: 6px;
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+        }
+
+        .panel-inner.scroll-y { overflow-y: auto; }
+        .panel-inner.scroll-y::-webkit-scrollbar { width: 5px; }
+        .panel-inner.scroll-y::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--cyber-cyan), var(--cyber-magenta));
+            border-radius: 99px;
+            opacity: 0.5;
+        }
+
+        /* —— Верх: 50 / 50 —— */
+        .top-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            align-items: stretch;
+            padding-top: 14px;
+            min-height: 0;
+        }
+
+        @media (max-width: 960px) {
+            .top-split { grid-template-columns: 1fr; }
+        }
+
+        .top-left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 0;
+            min-height: 260px;
+        }
+
+        .creation-strip {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .creation-strip .spaces {
+            display: flex;
+            gap: 4px;
+        }
+
+        .creation-strip .space-pill {
+            font-size: 11px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--frame-border);
+            background: var(--ink-elevated);
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .creation-strip .space-pill.active {
+            color: var(--cyber-cyan);
+            border-color: var(--cyber-cyan);
+            box-shadow: 0 0 14px rgba(34, 211, 238, 0.2);
+        }
+
+        .creation-strip input {
+            flex: 1;
+            min-width: 140px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--frame-border);
+            background: var(--ink-elevated);
+            color: var(--text);
+            font: inherit;
+            font-size: 12px;
+        }
+
+        .creation-strip input:focus {
+            outline: none;
+            border-color: var(--cyber-cyan);
+            box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.15);
+        }
+
+        .creation-strip .btn-mini {
+            padding: 8px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 6px;
+            border: 1px solid rgba(34, 211, 238, 0.4);
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.2), rgba(129, 140, 248, 0.15));
+            color: var(--text);
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: 0 0 16px rgba(34, 211, 238, 0.12);
+        }
+
+        .creation-strip .btn-mini:hover {
+            border-color: var(--cyber-cyan);
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.22);
+        }
+
+        body.light-theme .creation-strip .btn-mini {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.15), rgba(124, 58, 237, 0.1));
+            border-color: rgba(79, 70, 229, 0.4);
+            color: var(--text);
+            box-shadow: none;
+        }
+
+        .notes-block {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .notes-block .panel-inner {
+            padding: 10px 10px 8px;
+        }
+
+        .note-row {
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            background: var(--ink-elevated);
+            border: 1px solid rgba(34, 211, 238, 0.12);
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .note-row:hover { border-color: rgba(232, 121, 249, 0.25); }
+
+        .note-row:last-child { margin-bottom: 0; }
+
+        /* Календарь компактный — та же высота ряда, что и колонка с заметками */
+        .cal-block { min-height: 260px; height: 100%; display: flex; flex-direction: column; }
+
+        .cal-block .panel-inner { padding: 8px; }
+
+        .cal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            padding: 0 2px;
+        }
+
+        .cal-head h4 {
+            margin: 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--cyber-cyan);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-shadow: 0 0 18px rgba(34, 211, 238, 0.35);
+        }
+
+        .cal-head button {
+            width: auto;
+            margin: 0;
+            padding: 4px 8px;
+            font-size: 11px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .cal-head button:hover { color: var(--text); background: var(--line); }
+
+        .cal-dow {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+            text-align: center;
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+        }
+
+        .cal-cell {
+            aspect-ratio: 1;
+            max-height: 52px;
+            border-radius: 6px;
+            border: 1px solid var(--frame-border);
+            background: var(--ink-elevated);
+            padding: 3px 4px;
+            font-size: 10px;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .cal-cell:hover { border-color: var(--cyber-cyan); box-shadow: 0 0 10px rgba(34, 211, 238, 0.15); }
+        .cal-cell.today {
+            border-color: var(--neon-orange);
+            color: var(--neon-orange);
+            font-weight: 600;
+            box-shadow: 0 0 14px rgba(255, 122, 24, 0.25);
+        }
+        .cal-cell .num { align-self: flex-end; line-height: 1; font-size: 10px; }
+        .cal-cell .dotline {
+            font-size: 7px;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        /* —— Нижний блок: доска 2/3 + карточка 1/3 —— */
+        .board-split {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 14px;
+            align-items: stretch;
+            padding-top: 14px;
+            flex: 1;
+            min-height: 320px;
+        }
+
+        @media (max-width: 960px) {
+            .board-split { grid-template-columns: 1fr; min-height: auto; }
+        }
+
+        .board-panel .panel-inner {
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        .board-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .board-toolbar span {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-right: 4px;
+        }
+
+        .board-toolbar button,
+        .board-toolbar select {
+            font-size: 11px;
+            padding: 5px 8px;
+            border-radius: 5px;
+            border: 1px solid var(--frame-border);
+            background: var(--ink-elevated);
+            color: var(--text-muted);
+            cursor: pointer;
+            margin: 0;
+            width: auto;
+        }
+
+        /* Колонки статусов: сетка без наложений */
+        .kanban {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            align-items: stretch;
+            min-height: 220px;
+        }
+
+        @media (max-width: 1100px) {
+            .kanban { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        .kanban-col {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            background: var(--ink-elevated);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .kanban-col-head {
+            flex-shrink: 0;
+            padding: 6px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--line);
+            background: var(--ink);
+        }
+
+        .kanban-col.col-plan { box-shadow: inset 0 3px 0 0 var(--st-plan), 0 0 20px rgba(156, 163, 175, 0.08); }
+        .kanban-col.col-plan .kanban-col-head { color: var(--st-plan); text-shadow: 0 0 12px rgba(156, 163, 175, 0.4); }
+
+        .kanban-col.col-todo { box-shadow: inset 0 3px 0 0 var(--st-todo), 0 0 22px rgba(251, 191, 36, 0.12); }
+        .kanban-col.col-todo .kanban-col-head { color: var(--st-todo); text-shadow: 0 0 14px rgba(251, 191, 36, 0.45); }
+
+        .kanban-col.col-wait { box-shadow: inset 0 3px 0 0 var(--st-wait), 0 0 22px rgba(96, 165, 250, 0.15); }
+        .kanban-col.col-wait .kanban-col-head { color: var(--st-wait); text-shadow: 0 0 14px rgba(96, 165, 250, 0.4); }
+
+        .kanban-col.col-done { box-shadow: inset 0 3px 0 0 var(--st-done), 0 0 20px rgba(52, 211, 153, 0.12); }
+        .kanban-col.col-done .kanban-col-head { color: var(--st-done); text-shadow: 0 0 12px rgba(52, 211, 153, 0.4); }
+
+        .kanban-col-body {
+            flex: 1;
+            min-height: 120px;
+            max-height: 280px;
+            overflow-y: auto;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .kanban-col-body::-webkit-scrollbar { width: 4px; }
+        .kanban-col-body::-webkit-scrollbar-thumb {
+            background: var(--frame-border);
+            border-radius: 99px;
+        }
+
+        .task-pill {
+            padding: 8px 8px 8px 10px;
+            border-radius: 6px;
+            background: var(--ink);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-left: 3px solid var(--st-plan);
+            font-size: 11px;
+            cursor: pointer;
+            text-align: left;
+            transition: box-shadow 0.15s, border-color 0.15s;
+        }
+
+        .task-pill.st-plan { border-left-color: var(--st-plan); }
+        .task-pill.st-todo { border-left-color: var(--st-todo); box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.12); }
+        .task-pill.st-wait { border-left-color: var(--st-wait); box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.15); }
+        .task-pill.st-done { border-left-color: var(--st-done); opacity: 0.92; }
+
+        .task-pill.priority-high {
+            box-shadow: 0 0 0 1px rgba(255, 122, 24, 0.45), 0 0 18px rgba(255, 122, 24, 0.22);
+            border-color: rgba(255, 122, 24, 0.35);
+        }
+
+        .task-pill:hover { border-color: rgba(34, 211, 238, 0.35); box-shadow: 0 0 14px rgba(34, 211, 238, 0.1); }
+        .task-pill.active {
+            border-color: var(--cyber-cyan);
+            outline: 1px solid rgba(34, 211, 238, 0.5);
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.18);
+        }
+
+        .task-pill .t-head { display: flex; align-items: center; gap: 6px; min-width: 0; }
+        .task-pill .t-emoji { flex-shrink: 0; font-size: 14px; }
+        .task-pill .t-title {
+            font-weight: 600;
+            color: var(--text);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
+        }
+        .task-pill .t-meta {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .task-pill .t-visual { margin-top: 4px; font-size: 12px; color: var(--st-todo); min-height: 16px; }
+
+        /* Карточка справа */
+        .side-panel.card-plan { --card-accent: var(--st-plan); }
+        .side-panel.card-todo { --card-accent: var(--st-todo); }
+        .side-panel.card-wait { --card-accent: var(--st-wait); }
+        .side-panel.card-done { --card-accent: var(--st-done); }
+        .side-panel.card-high { box-shadow: var(--frame-glow), 0 0 28px rgba(255, 122, 24, 0.15); }
+
+        .side-panel .panel-inner {
+            padding: 12px 14px;
+            border-top: 2px solid var(--card-accent, var(--cyber-cyan));
+        }
+
+        .side-panel h3 {
+            margin: 0 0 12px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--card-accent, var(--text-muted));
+            text-shadow: 0 0 14px currentColor;
+        }
+
+        .field-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .field-row-2 > div { min-width: 0; }
+
+        .side-panel label {
+            display: block;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .side-panel input,
+        .side-panel textarea,
+        .side-panel select {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--frame-border);
+            background: var(--ink-elevated);
+            color: var(--text);
+            font: inherit;
+            font-size: 12px;
+        }
+
+        .side-panel textarea { min-height: 72px; resize: vertical; }
+
+        .side-panel .btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .side-panel .btn-row button {
+            flex: 1;
+            min-width: 100px;
+            margin: 0;
+            padding: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 6px;
+            border: 1px solid rgba(34, 211, 238, 0.4);
+            background: linear-gradient(135deg, rgba(52, 211, 153, 0.35), rgba(34, 211, 238, 0.25));
+            color: var(--text);
+            cursor: pointer;
+            box-shadow: 0 0 18px rgba(52, 211, 153, 0.15);
+        }
+
+        .side-panel .btn-row button.secondary {
+            background: transparent;
+            color: var(--st-done);
+            border-color: rgba(52, 211, 153, 0.45);
+            box-shadow: 0 0 14px rgba(52, 211, 153, 0.12);
+        }
+
+        .side-panel .btn-row button.danger {
+            background: transparent;
+            color: var(--danger);
+            border-color: rgba(248, 113, 113, 0.35);
+            box-shadow: 0 0 12px rgba(248, 113, 113, 0.12);
+        }
+
+        .hint-empty {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        a.nav-a {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+        }
+        a.nav-a:hover { color: var(--cyber-cyan); background: rgba(34, 211, 238, 0.08); }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <p class="proto-badge">Прототип вёрстки (без Firebase). Файл: index-minimal-ui.html — для согласования перед переносом в основной интерфейс.</p>
+
+        <header class="app-header">
+            <nav class="header-nav" aria-label="Основное меню">
+                <button type="button" class="active">Рабочий стол</button>
+                <button type="button">Статистика</button>
+                <button type="button">Команды</button>
+                <button type="button">Справка</button>
+                <a class="nav-a" href="tz.html">Технические задания</a>
+            </nav>
+            <div class="header-vrule" aria-hidden="true"></div>
+            <div class="header-user">
+                <span class="user-id">Алексей · #A1B2C3</span>
+                <button type="button" onclick="document.body.classList.toggle('light-theme')">Тема</button>
+                <button type="button" class="btn-exit">Выйти</button>
+            </div>
+        </header>
+
+        <hr class="hr" />
+
+        <section class="top-split" aria-label="Заметки и календарь">
+            <div class="top-left-col">
+                <div class="creation-strip">
+                    <div class="spaces">
+                        <span class="space-pill active">Личные</span>
+                        <span class="space-pill">Команда демо</span>
+                    </div>
+                    <input type="text" placeholder="Заметка…" readonly tabindex="-1" />
+                    <button type="button" class="btn-mini">Заметка</button>
+                    <button type="button" class="btn-mini">Задача</button>
+                </div>
+                <div class="panel-frame notes-block">
+                    <div class="panel-inner scroll-y">
+                        <div class="note-row"><span>Согласовать ТЗ до пятницы</span><span style="color:var(--text-muted);font-size:10px;">···</span></div>
+                        <div class="note-row"><span>Напомнить про доступы к тестовому контуру</span><span style="color:var(--text-muted);font-size:10px;">···</span></div>
+                        <div class="note-row"><span>Идея: фильтр по тегам на доске</span><span style="color:var(--text-muted);font-size:10px;">···</span></div>
+                        <div class="note-row"><span>…</span><span style="color:var(--text-muted);font-size:10px;">···</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-frame cal-block">
+                <div class="panel-inner">
+                    <div class="cal-head">
+                        <button type="button" aria-label="Предыдущий месяц">‹</button>
+                        <h4>Апрель 2026</h4>
+                        <button type="button" aria-label="Следующий месяц">›</button>
+                    </div>
+                    <div class="cal-dow">
+                        <span>ПН</span><span>ВТ</span><span>СР</span><span>ЧТ</span><span>ПТ</span><span>СБ</span><span>ВС</span>
+                    </div>
+                    <div class="cal-grid">
+                        <!-- пустые ячейки + примеры -->
+                        <div class="cal-cell" style="visibility:hidden"></div><div class="cal-cell" style="visibility:hidden"></div>
+                        <div class="cal-cell"><span class="num">1</span></div>
+                        <div class="cal-cell"><span class="num">2</span></div>
+                        <div class="cal-cell today"><span class="num">3</span><span class="dotline">· ·</span></div>
+                        <div class="cal-cell"><span class="num">4</span></div>
+                        <div class="cal-cell"><span class="num">5</span></div>
+                        <div class="cal-cell"><span class="num">6</span></div>
+                        <div class="cal-cell"><span class="num">7</span></div>
+                        <div class="cal-cell"><span class="num">8</span></div>
+                        <div class="cal-cell"><span class="num">9</span></div>
+                        <div class="cal-cell"><span class="num">10</span><span class="dotline">длинная…</span></div>
+                        <div class="cal-cell"><span class="num">11</span></div>
+                        <div class="cal-cell"><span class="num">12</span></div>
+                        <div class="cal-cell"><span class="num">13</span></div>
+                        <div class="cal-cell"><span class="num">14</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="hr" style="margin-top:14px;" />
+
+        <section class="board-split" aria-label="Доска и карточка">
+            <div class="panel-frame board-panel">
+                <div class="panel-inner">
+                    <div class="board-toolbar">
+                        <span>Доска</span>
+                        <button type="button">Фильтры</button>
+                        <select aria-label="Вид"><option>Доска</option><option>Таблица</option></select>
+                        <select aria-label="Сортировка"><option>Дедлайн</option></select>
+                    </div>
+                    <div class="kanban">
+                        <div class="kanban-col col-plan">
+                            <div class="kanban-col-head">Plan · 2</div>
+                            <div class="kanban-col-body">
+                                <div class="task-pill st-plan active">
+                                    <div class="t-head"><span class="t-emoji">📄</span><span class="t-title">Черновик регламента</span></div>
+                                    <div class="t-meta">#процесс · дедлайн 2026-04-14</div>
+                                </div>
+                                <div class="task-pill st-plan">
+                                    <div class="t-head"><span class="t-emoji">🦎</span><span class="t-title">Форма для конкурса — Катя</span></div>
+                                    <div class="t-meta">#SMM · без дедлайна в демо</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kanban-col col-todo">
+                            <div class="kanban-col-head">To Do · 1</div>
+                            <div class="kanban-col-body">
+                                <div class="task-pill st-todo priority-high">
+                                    <div class="t-head"><span class="t-emoji">⚙️</span><span class="t-title">Интеграция API — срочно</span></div>
+                                    <div class="t-visual">⚙️ 🔨</div>
+                                    <div class="t-meta">высокий приоритет · 2026-04-11</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kanban-col col-wait">
+                            <div class="kanban-col-head">Wait · 1</div>
+                            <div class="kanban-col-body">
+                                <div class="task-pill st-wait">
+                                    <div class="t-head"><span class="t-emoji">⏳</span><span class="t-title">Согласование с заказчиком</span></div>
+                                    <div class="t-meta">ждём подпись · WAIT</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kanban-col col-done">
+                            <div class="kanban-col-head">Done · 1</div>
+                            <div class="kanban-col-body">
+                                <div class="task-pill st-done">
+                                    <div class="t-head"><span class="t-emoji">✅</span><span class="t-title">Обновить прайс в каталоге</span></div>
+                                    <div class="t-meta">завершено 2026-04-09</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-frame side-panel card-plan">
+                <div class="panel-inner">
+                    <h3>Карточка задачи — PLAN</h3>
+                    <label>Название</label>
+                    <input type="text" value="Черновик регламента" readonly />
+                    <label>Описание</label>
+                    <textarea readonly rows="3">Собрать комментарии юриста и ИТ. Отправить на согласование до конца недели.</textarea>
+                    <div class="field-row-2">
+                        <div>
+                            <label>Эмодзи</label>
+                            <input type="text" value="📄" readonly maxlength="2" />
+                        </div>
+                        <div>
+                            <label>Тег</label>
+                            <input type="text" value="процесс" readonly />
+                        </div>
+                    </div>
+                    <div class="field-row-2">
+                        <div>
+                            <label>Важность</label>
+                            <select disabled>
+                                <option>Низкая</option>
+                                <option selected>Средняя</option>
+                                <option>Высокая</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Статус</label>
+                            <select disabled>
+                                <option selected>Plan</option>
+                                <option>To Do</option>
+                                <option>Wait</option>
+                                <option>Done</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field-row-2">
+                        <div>
+                            <label>Дедлайн</label>
+                            <input type="date" value="2026-04-14" readonly />
+                        </div>
+                        <div>
+                            <label>Дата завершения</label>
+                            <input type="text" value="—" readonly />
+                        </div>
+                    </div>
+                    <div class="btn-row">
+                        <button type="button">Сохранить</button>
+                        <button type="button" class="secondary">Выполнить</button>
+                        <button type="button" class="danger">Удалить</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
